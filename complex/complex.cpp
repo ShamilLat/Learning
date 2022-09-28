@@ -26,11 +26,11 @@ double complex::re() const {
 double complex::im() const {
   return im_;
 }
-double complex::abs2() const {
-  return re_ * re_ + im_ * im_;
-}
 double complex::abs() const {
   return sqrt(re_ * re_ + im_ * im_);
+}
+double complex::abs2() const {
+  return re_ * re_ + im_ * im_;
 }
 
 std::string complex::to_string() const {

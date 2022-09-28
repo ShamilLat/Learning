@@ -10,10 +10,15 @@ class complex_stack {
   complex_stack(const complex num);
   complex_stack(const complex_stack& other_stack);
 
-  size_t size() const;
+  size_t size() const;  // return size of stack (amount of complex numbers)
 
+  // delete last number
   friend complex_stack operator~(complex_stack other);
+
+  // add number in stack
   friend complex_stack operator<<(complex_stack other_stack, const complex num);
+
+  // return last number
   friend complex operator+(const complex_stack& other_stack);
 
   complex_stack& operator=(const complex_stack& other_stack);

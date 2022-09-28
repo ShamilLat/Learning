@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include "complex.hpp"
-#include "complex_stack.cpp"
+#include "complex_stack.hpp"
 #include "complex_eval.hpp"
 
 namespace numbers {

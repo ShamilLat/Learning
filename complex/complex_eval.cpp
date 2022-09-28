@@ -7,8 +7,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "complex.cpp"
+#include "complex.hpp"
 #include "complex_stack.cpp"
+#include "complex_eval.hpp"
 
 namespace numbers {
 

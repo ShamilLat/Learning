@@ -12,10 +12,10 @@ class complex_stack {
 
   size_t size() const;  // return size of stack (amount of complex numbers)
 
-  // delete last number
+  // return new stack without last number. Old stack doesn't change
   friend complex_stack operator~(complex_stack other);
 
-  // add number in stack
+  // returns new stack with new number in it. Old stack doesn't change
   friend complex_stack operator<<(complex_stack other_stack, const complex num);
 
   // return last number

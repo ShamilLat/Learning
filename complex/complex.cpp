@@ -23,12 +23,15 @@ explicit complex::complex(std::string s) {
 double complex::re() const {
   return re_;
 }
+
 double complex::im() const {
   return im_;
 }
+
 double complex::abs() const {
   return sqrt(re_ * re_ + im_ * im_);
 }
+
 double complex::abs2() const {
   return re_ * re_ + im_ * im_;
 }
@@ -45,17 +48,20 @@ complex& complex::operator+=(complex c) {
   im_ += c.im();
   return *this;
 }
+
 complex& complex::operator-=(complex c) {
   re_ -= c.re();
   im_ -= c.im();
   return *this;
 }
+
 complex& complex::operator*=(complex c) {
   double ch_ = re_;
   re_ = c.re() * re_ - c.im() * im_;
   im_ = ch_ * c.im() + im_ * c.re();
   return *this;
 }
+
 complex& complex::operator/=(complex c) {
   double ch_ = re_;
   re_ = (re_ * c.re() + im_ * c.im()) / (c.re() * c.re() + c.im() * c.im());
@@ -74,14 +80,17 @@ complex operator+(complex x, complex y) {
   x += y;
   return x;
 }
+
 complex operator-(complex x, complex y) {
   x -= y;
   return x;
 }
+
 complex operator*(complex x, complex y) {
   x *= y;
   return x;
 }
+
 complex operator/(complex x, complex y) {
   x /= y;
   return x;

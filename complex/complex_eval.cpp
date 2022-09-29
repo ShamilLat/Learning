@@ -1,3 +1,4 @@
+#include "complex_eval.hpp"
 #include <stdio.h>
 #include <cmath>
 #include <functional>
@@ -9,7 +10,6 @@
 #include <vector>
 #include "complex.hpp"
 #include "complex_stack.hpp"
-#include "complex_eval.hpp"
 
 namespace numbers {
 
@@ -68,4 +68,5 @@ complex eval(const std::vector<std::string>& args, const complex& z) {
   }
   return +st;
 }
+
 }  // namespace numbers

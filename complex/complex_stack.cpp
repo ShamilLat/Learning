@@ -1,3 +1,4 @@
+#include "complex_stack.hpp"
 #include <stdio.h>
 #include <cmath>
 #include <iomanip>
@@ -5,7 +6,6 @@
 #include <sstream>
 #include <string>
 #include "complex.hpp"
-#include "complex_stack.hpp"
 
 namespace numbers {
 
@@ -83,6 +83,7 @@ complex_stack operator<<(complex_stack other, const complex num) {
     return other;
   }
 }
+
 complex operator+(const complex_stack& other_stack) {
   return other_stack.stack_[other_stack.poz_];
 }

@@ -13,6 +13,8 @@ float prob(float complex x) {
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 struct state {
+  state(char n1_, char n2_, char f0u_, char f0d_, char f1u_, char f1d_) : n1(n1_), n2(n2_){}
+  
   char n1;
   char n2;
   char f0u;
@@ -22,12 +24,8 @@ struct state {
 };
 
 struct state states[24] = {
-    {0, 0, 1, 1, 0, 0},  // 0
-    {0, 0, 0, 1, 0, 1},  // 1
-    {0, 0, 1, 0, 1, 0},  // 2
-    {0, 0, 1, 0, 0, 1},  // 3
-    {0, 0, 0, 1, 1, 0},  // 4
-    {0, 0, 0, 0, 1, 1},  // 5
+    {0, 0, 1, 1, 0, 0}, {0, 0, 0, 1, 0, 1}, {0, 0, 1, 0, 1, 0},
+    {0, 0, 1, 0, 0, 1}, {0, 0, 0, 1, 1, 0}, {0, 0, 0, 0, 1, 1},
 
     {0, 1, 1, 1, 0, 0}, {0, 1, 0, 1, 0, 1}, {0, 1, 1, 0, 1, 0},
     {0, 1, 1, 0, 0, 1}, {0, 1, 0, 1, 1, 0}, {0, 1, 0, 0, 1, 1},
@@ -96,7 +94,7 @@ int main(int argc, char** argv) {
     printf("Need more arguments");
     return 0;
   }
-  
+
   int maxt = atoi(argv[1]);
   int niter = atoi(argv[2]);
   float dt = (float)maxt / niter;

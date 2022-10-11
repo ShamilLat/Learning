@@ -4,6 +4,7 @@ import pika, sys, os
 my_letter = ''
 names_list = []
 stop_msg = "STPCNSM"
+signal_msg = 'NDLST' # Need List
 
 def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host = 'localhost'))
@@ -30,8 +31,13 @@ def main():
             print("[R] |" + my_letter + "| Got my streets")
 
     def output_my_streets(ch, method, properties, body):
-        print("Test")
-
+        if body.decode() == signal_msg:
+            for i in names_list:
+                channel.basic_publish(exchange='letters', routing_key=my_letter, body=i)
+            channel.basic_publish(exchange='letters', routing_key=my_letter, body=stop_msg)
+        else:
+            print('[R] Not a Signal |' + body.decode() + '|' )
+        
     # Берем по одной букве для каждого процесса (только одна)
     channel.basic_consume(queue='get_first_letter', on_message_callback=get_my_letter, auto_ack=True)
     print("[R] Waiting for letter.")
@@ -50,7 +56,7 @@ def main():
 
     # Принимаем указания от менеджера
     # channel.queue_declare(queue=my_letter, auto_delete=True)
-    channel.basic_consume(queue=my_letter, on_message_callback=output_my_streets)
+    channel.basic_consume(queue=my_letter, on_message_callback=output_my_streets, auto_ack=True)
     channel.start_consuming()
 
     connection.close()

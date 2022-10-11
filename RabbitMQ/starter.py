@@ -48,8 +48,8 @@ def main():
     client_cmd = "python3 client.py"
     cmd_args = shlex.split(manager_cmd)
     sp.Popen(cmd_args, stdin=None, stdout=None, stderr=None, close_fds=True)
-    cmd_args = shlex.split(manager_cmd)
-    sp.Popen(cmd_args, stdin=None, stdout=None, stderr=None, close_fds=True)
+    # cmd_args = shlex.split(client_cmd)
+    # sp.Popen(cmd_args, stdin=None, stdout=None, stderr=None, close_fds=True)
 
     # p1 = sp.Popen(args, stdin=sp.PIPE, stderr=sp.STDOUT)
     # p2 = sp.Popen(args, stdin=sp.PIPE, stderr=sp.STDOUT)

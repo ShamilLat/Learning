@@ -3,8 +3,6 @@ import pika
 import sys, os
 import time
 
-stop_msg = "STPCNSM" # Stop Consume
-
 class OSMHandler(osm.SimpleHandler): 
     def __init__(self): 
         osm.SimpleHandler.__init__(self) 
@@ -13,6 +11,8 @@ class OSMHandler(osm.SimpleHandler):
     def way(self, w): 
         if w.tags.get('highway') == 'residential' and 'name' in w.tags:
             self.highways_data.append(w.tags['name']) 
+
+stop_msg = "STPCNSM" # Stop Consume
 
 def main():
     osmhandler = OSMHandler() 
@@ -51,12 +51,11 @@ def main():
     channel.queue_declare(queue=starter_queue_name)
     channel.basic_publish(exchange='', routing_key=starter_queue_name, body=str(len(letters_list)))
 
-    # Отправляем в менеджера все буквы
+    # Отправляем в менеджер все буквы
     channel.queue_declare(queue=manager_queue_name, auto_delete=True)
     for i in letters_list:
         channel.basic_publish(exchange='', routing_key=manager_queue_name, body=i)
     
-    channel.basic_publish(exchange='', routing_key=manager_queue_name, body=stop_msg)
 
     # Отправка в get_first_letter первые буквы доступных нам улиц
     channel.queue_declare(queue='get_first_letter')
@@ -73,13 +72,16 @@ def main():
             channel.basic_publish(exchange='letters',
                                 routing_key=i,
                                 body=h_name)
-            message = "Sended " + h_name + " with routing key |" + i + "|"
+            message = "[E] Sended " + h_name + " with routing key |" + i + "|"
             print(message)
 
-    stop_msg = "STPCNSM" # Stop Consume
+    # Даем процессам-хранителям понять, что ждать улиц больше не надо
     for i in letters_list:
         channel.basic_publish(exchange='letters', routing_key=i, body=stop_msg)
 
+    # Отправляем в Менеджер сообщение, что он может начинать работу
+    channel.basic_publish(exchange='', routing_key=manager_queue_name, body=stop_msg)
+    
     connection.close()
 
 if __name__ == '__main__':

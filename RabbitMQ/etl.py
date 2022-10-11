@@ -1,31 +1,93 @@
 import osmium as osm
+import pika
+import sys, os
+import time
 
-# osm_file = open("map.osm")
+stop_msg = "STPCNSM" # Stop Consume
 
 class OSMHandler(osm.SimpleHandler): 
     def __init__(self): 
         osm.SimpleHandler.__init__(self) 
-        self.h_data = []
+        self.highways_data = []
 
     def way(self, w): 
         if w.tags.get('highway') == 'residential' and 'name' in w.tags:
-            self.h_data.append(w.tags['name']) 
+            self.highways_data.append(w.tags['name']) 
 
+def main():
+    osmhandler = OSMHandler() 
+    osmhandler.apply_file("map.osm") 
 
-osmhandler = OSMHandler() 
-osmhandler.apply_file("map.osm") 
+    # Убираем повторения в названиях улиц
+    osmhandler.highways_data = list(dict.fromkeys(osmhandler.highways_data))
 
-osmhandler.h_data = list(dict.fromkeys(osmhandler.h_data))
+    # Удаляем слово "Улица"
+    highway_russian = 'улица'
+    for i in range(0, len(osmhandler.highways_data)):
+        if highway_russian in osmhandler.highways_data[i].lower():
+            osmhandler.highways_data[i] = (osmhandler.highways_data[i].replace('улица', '')).strip()
 
-h_russian = 'улица'
-for i in range(0, len(osmhandler.h_data)):
-    if h_russian in osmhandler.h_data[i].lower():
-        osmhandler.h_data[i] = (osmhandler.h_data[i].replace('улица', '')).strip()
-        
+    # Убираем повторерния в первых буквах улиц
+    letters_list = list(dict.fromkeys((list(i.lower()[0] for i in osmhandler.highways_data))))
+    
+    highways_dict = {}
 
-print(osmhandler.h_data)
-print(osmhandler.h_count)
-#data_colnames = ['type', 'tagkey', 'tagvalue'] 
-#df_osm = pd.DataFrame(osmhandler.osm_data, columns=data_colnames) 
-#df_osm = df_osm[df_osm["type"] == "way"] 
-#df_osm = df_osm[df_osm["tagkey"] == "name"] 
+    # Словарь: ключ = первая буква улицы, значение = список улиц на эту букву
+    for i in osmhandler.highways_data:
+        highways_dict[i.lower()[0]] = []
+
+    for i in osmhandler.highways_data:
+        highways_dict[i.lower()[0]].append(i)
+
+    #PIKA
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host = 'localhost'))
+    channel = connection.channel()
+
+    starter_queue_name = 'starter_queue'
+    manager_queue_name = 'manager_queue'
+    # client_queue_name = 'client_queue'
+
+    # Отправляем в Стартер число, сколько процессов нам понадобятся
+    channel.queue_declare(queue=starter_queue_name)
+    channel.basic_publish(exchange='', routing_key=starter_queue_name, body=str(len(letters_list)))
+
+    # Отправляем в менеджера все буквы
+    channel.queue_declare(queue=manager_queue_name, auto_delete=True)
+    for i in letters_list:
+        channel.basic_publish(exchange='', routing_key=manager_queue_name, body=i)
+    
+    channel.basic_publish(exchange='', routing_key=manager_queue_name, body=stop_msg)
+
+    # Отправка в get_first_letter первые буквы доступных нам улиц
+    channel.queue_declare(queue='get_first_letter')
+    for i in letters_list:
+        channel.basic_publish(exchange='', routing_key='get_first_letter', body=i)
+
+    # print(letters_list)
+
+    channel.exchange_declare(exchange='letters', exchange_type='direct')
+    
+    time.sleep(1)
+    for i in letters_list:
+        for h_name in highways_dict[i]:
+            channel.basic_publish(exchange='letters',
+                                routing_key=i,
+                                body=h_name)
+            message = "Sended " + h_name + " with routing key |" + i + "|"
+            print(message)
+
+    stop_msg = "STPCNSM" # Stop Consume
+    for i in letters_list:
+        channel.basic_publish(exchange='letters', routing_key=i, body=stop_msg)
+
+    connection.close()
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Interrupted")
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)

@@ -6,6 +6,7 @@ client_queue_name = 'client_queue'
 stop_msg = "STPCNSM" # Stop Consume
 signal_msg = 'NDLST' # Need List
 names_list = []
+m_str = "_manager"
 
 def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host = 'localhost'))
@@ -20,7 +21,6 @@ def main():
             print("[M] Stop getting letters")
             channel.stop_consuming()
 
-
     def get_name(ch, method, properties, body):
         if body.decode() != stop_msg:
             names_list.append(body.decode())
@@ -30,10 +30,11 @@ def main():
             channel.stop_consuming()
 
     def get_command(ch, method, properties, body):
+        print("[M] I got command", body.decode())
         if body.decode() != stop_msg:
-            channel.basic_publish(exchange='letters', routing_key=(body.decode()).lower(), body=signal_msg)
+            channel.basic_publish(exchange='manager', routing_key=(body.decode()).lower()+m_str, body=signal_msg)
             print("[M] Sended a signal_msg to " + (body.decode()).lower())
-            channel.basic_consume(queue=(body.decode()).lower(), on_message_callback=get_name, auto_ack=True)
+            channel.basic_consume(queue=(body.decode()).lower()+m_str, on_message_callback=get_name, auto_ack=True)
             channel.start_consuming()
         else:
             print("[M] Stop working with client")
@@ -46,12 +47,14 @@ def main():
 
     print("[M] Got all letters from etl")
 
-    # подключается к обменнику letters
-    channel.exchange_declare(exchange='letters', exchange_type='direct')
+    # подключаемся к обменникам
+    # channel.exchange_declare(exchange='letters', exchange_type='direct')
+    channel.exchange_declare(exchange='manager', exchange_type='direct', auto_delete=True)
 
     # Общается с клиентом
     channel.queue_declare(queue=client_queue_name, auto_delete=True)
     channel.basic_consume(queue=client_queue_name, on_message_callback=get_command, auto_ack=True)
+    # print("[M] Im here")
     channel.start_consuming()
 
 

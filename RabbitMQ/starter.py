@@ -34,20 +34,15 @@ def main():
     channel.basic_consume(queue=starter_queue_name, on_message_callback=get_number, auto_ack=True)
     channel.start_consuming()
 
-    data_processes = []
-
-    # data_pr_cmd = "python3 receive.py"
     data_pr_cmd = "python3 data_process.py"
     cmd_args = shlex.split(data_pr_cmd)
     for i in range(0, count_processes):
         sp.Popen(cmd_args, stdin=None, stdout=None, stderr=None, close_fds=True)
-        # sp.run(cmd_args)
-        # data_processes.append(pr)
 
     manager_cmd = "python3 manager.py"
     client_cmd = "python3 client.py"
     cmd_args = shlex.split(manager_cmd)
-    sp.Popen(cmd_args, stdin=None, stdout=None, stderr=None, close_fds=True)
+    # sp.Popen(cmd_args, stdin=None, stdout=None, stderr=None, close_fds=True)
     # cmd_args = shlex.split(client_cmd)
     # sp.Popen(cmd_args, stdin=None, stdout=None, stderr=None, close_fds=True)
 

@@ -5,6 +5,7 @@ my_letter = ''
 names_list = []
 stop_msg = "STPCNSM"
 signal_msg = 'NDLST' # Need List
+m_str = "_manager"
 
 def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host = 'localhost'))
@@ -25,7 +26,7 @@ def main():
         if body.decode() != stop_msg:
             global names_list
             names_list.append(body.decode())
-            print("[R] In get_highway", body.decode())
+            # print("[R] In get_highway", body.decode())
         else:
             channel.stop_consuming()
             print("[R] |" + my_letter + "| Got my streets")
@@ -33,8 +34,8 @@ def main():
     def output_my_streets(ch, method, properties, body):
         if body.decode() == signal_msg:
             for i in names_list:
-                channel.basic_publish(exchange='letters', routing_key=my_letter, body=i)
-            channel.basic_publish(exchange='letters', routing_key=my_letter, body=stop_msg)
+                channel.basic_publish(exchange='manager', routing_key=my_letter, body=i)
+            channel.basic_publish(exchange='manager', routing_key=my_letter, body=stop_msg)
         else:
             print('[R] Not a Signal |' + body.decode() + '|' )
         
@@ -43,11 +44,9 @@ def main():
     print("[R] Waiting for letter.")
     channel.start_consuming()
     
-    res = channel.queue_declare(queue=my_letter)
-    # res = channel.queue_declare(queue=my_letter, auto_delete=True)
-    # my_q_name = res.method.queue
-
+    
     print("my letter =", my_letter)
+    channel.queue_declare(queue=my_letter)
     channel.queue_bind(queue=my_letter, exchange='letters', routing_key=my_letter)
 
     # Принимаем только улицы на свою букву
@@ -55,8 +54,11 @@ def main():
     channel.start_consuming()
 
     # Принимаем указания от менеджера
-    # channel.queue_declare(queue=my_letter, auto_delete=True)
-    channel.basic_consume(queue=my_letter, on_message_callback=output_my_streets, auto_ack=True)
+    channel.exchange_declare(exchange='manager', exchange_type='direct', auto_delete=True)
+    channel.queue_declare(queue=(my_letter+m_str))
+    channel.queue_bind(queue=(my_letter+m_str), exchange='manager', routing_key=(my_letter+m_str))
+    channel.basic_consume(queue=(my_letter+m_str), on_message_callback=output_my_streets, auto_ack=True)
+    print("[R] Waiting for signal")
     channel.start_consuming()
 
     connection.close()

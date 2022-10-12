@@ -5,19 +5,21 @@ my_letter = ''
 names_list = []
 stop_msg = "STPCNSM"
 signal_msg = 'NDLST' # Need List
-m_str = "_manager"
+m_str = "to_manager"
+m_str2 = "manager_to_"
+end_str = "end_"
 
 def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host = 'localhost'))
     channel = connection.channel()
+    channel_manager = connection.channel()
 
     channel.exchange_declare(exchange='letters', exchange_type='direct')
 
-    channel.queue_declare(queue='get_first_letter')
+    channel.queue_declare(queue='get_first_letter', auto_delete=True)
 
     def get_my_letter(ch, method, properties, body):
         channel.stop_consuming()
-        print("[R] Received %r" % body.decode())
         
         global my_letter
         my_letter = body.decode()
@@ -26,22 +28,20 @@ def main():
         if body.decode() != stop_msg:
             global names_list
             names_list.append(body.decode())
-            # print("[R] In get_highway", body.decode())
         else:
             channel.stop_consuming()
-            print("[R] |" + my_letter + "| Got my streets")
 
     def output_my_streets(ch, method, properties, body):
+        print("[R] |" + my_letter + "| Got signal")
         if body.decode() == signal_msg:
             for i in names_list:
-                channel.basic_publish(exchange='manager', routing_key=my_letter, body=i)
-            channel.basic_publish(exchange='manager', routing_key=my_letter, body=stop_msg)
-        else:
-            print('[R] Not a Signal |' + body.decode() + '|' )
+                channel_manager.basic_publish(exchange='manager', routing_key=m_str, body=i)
+            channel_manager.basic_publish(exchange='manager', routing_key=m_str, body=stop_msg)
+        elif body.decode() == end_str:
+            channel.stop_consuming()
         
     # Берем по одной букве для каждого процесса (только одна)
     channel.basic_consume(queue='get_first_letter', on_message_callback=get_my_letter, auto_ack=True)
-    print("[R] Waiting for letter.")
     channel.start_consuming()
     
     
@@ -54,10 +54,14 @@ def main():
     channel.start_consuming()
 
     # Принимаем указания от менеджера
-    channel.exchange_declare(exchange='manager', exchange_type='direct', auto_delete=True)
-    channel.queue_declare(queue=(my_letter+m_str))
-    channel.queue_bind(queue=(my_letter+m_str), exchange='manager', routing_key=(my_letter+m_str))
-    channel.basic_consume(queue=(my_letter+m_str), on_message_callback=output_my_streets, auto_ack=True)
+    channel_manager.exchange_declare(exchange='manager', exchange_type='direct')
+    channel_manager.queue_declare(queue=m_str)
+    channel_manager.queue_bind(queue=m_str, exchange='manager', routing_key=m_str)
+
+    channel.exchange_declare(exchange='manager', exchange_type='direct')
+    channel.queue_declare(queue=(m_str2+my_letter))
+    channel.queue_bind(queue=(m_str2+my_letter), exchange='manager', routing_key=(m_str2+my_letter))
+    channel.basic_consume(queue=(m_str2+my_letter), on_message_callback=output_my_streets, auto_ack=True)
     print("[R] Waiting for signal")
     channel.start_consuming()
 

@@ -44,21 +44,20 @@ def main():
     channel = connection.channel()
 
     starter_queue_name = 'starter_queue'
-    manager_queue_name = 'manager_queue'
-    # client_queue_name = 'client_queue'
-
+    etl_to_m_str = 'etl_to_manager'
+    
     # Отправляем в Стартер число, сколько процессов нам понадобятся
-    channel.queue_declare(queue=starter_queue_name)
+    channel.queue_declare(queue=starter_queue_name, auto_delete=True)
     channel.basic_publish(exchange='', routing_key=starter_queue_name, body=str(len(letters_list)))
 
     # Отправляем в менеджер все буквы
-    channel.queue_declare(queue=manager_queue_name, auto_delete=True)
+    channel.queue_declare(queue=etl_to_m_str, auto_delete=True)
     for i in letters_list:
-        channel.basic_publish(exchange='', routing_key=manager_queue_name, body=i)
-    
+        channel.basic_publish(exchange='', routing_key=etl_to_m_str, body=i)
+    channel.basic_publish(exchange='', routing_key=etl_to_m_str, body=stop_msg)
 
     # Отправка в get_first_letter первые буквы доступных нам улиц
-    channel.queue_declare(queue='get_first_letter')
+    channel.queue_declare(queue='get_first_letter', auto_delete=True)
     for i in letters_list:
         channel.basic_publish(exchange='', routing_key='get_first_letter', body=i)
 
@@ -73,14 +72,14 @@ def main():
                                 routing_key=i,
                                 body=h_name)
             message = "[E] Sended " + h_name + " with routing key |" + i + "|"
-            print(message)
+            # print(message)
 
     # Даем процессам-хранителям понять, что ждать улиц больше не надо
     for i in letters_list:
         channel.basic_publish(exchange='letters', routing_key=i, body=stop_msg)
 
     # Отправляем в Менеджер сообщение, что он может начинать работу
-    channel.basic_publish(exchange='', routing_key=manager_queue_name, body=stop_msg)
+    channel.basic_publish(exchange='', routing_key=etl_to_m_str, body=stop_msg)
     
     connection.close()
 

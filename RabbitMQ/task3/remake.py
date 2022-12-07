@@ -6,7 +6,7 @@ import os
 os.system("python3 /Users/2lapsha1/MSU_learning/RabbitMQ/task3/clear.py")
 
 # generate folders and txt files    
-words = ['ananas', 'banana', 'apple', 'grape', 'pomegranate', 'plum', 'cat', 'dog', 'horse', 'cow', 'duck', 'zebra', 'lion', 'parrot', 'way', 'universe', 'void', 'yellow', 'red', 'blue', 'green', 'orange', 'white', 'telephone', 'computer', 'fridge', 'table', 'wave', 'monitor', 'news', 'cupboard', 'letter']
+words = ['ananas', 'banana', 'apple', 'grape', 'pomegranate', 'plum', 'cat', 'dog', 'horse', 'cow', 'duck', 'zebra', 'lion', 'parrot', 'way', 'universe', 'void', 'yellow', 'red', 'blue', 'green', 'orange', 'white', 'telephone', 'computer', 'fridge', 'table', 'wave', 'monitor', 'news', 'cupboard', 'letter', 'store', 'power', 'huge', 'over', 'wonderfull', 'xcode', 'iphone', 'peace', 'tech', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'hundred']
 with open("input.txt", "r") as input_f:
     n = int(input_f.readline())
     k = int(input_f.readline())

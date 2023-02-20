@@ -19,7 +19,12 @@ master_queue_name = 'master'
 channel.queue_declare(queue=master_queue_name, auto_delete=True)
 channel.queue_bind(exchange='exchange', queue=master_queue_name)
 
+master_cnt_queue_name = 'master_counts'
+channel.queue_declare(queue=master_cnt_queue_name, auto_delete=True)
+channel.queue_bind(exchange='exchange', queue=master_cnt_queue_name)
+
 results = {}
+counts = {}
 shuffle_count = 0
 
 def get_shuffle_dict(channel, method, properties, body):
@@ -32,16 +37,24 @@ def get_shuffle_dict(channel, method, properties, body):
             channel.stop_consuming()
             pairs = list(results.items())
             for ii in pairs:
-                # print("red send", ii)
                 channel.basic_publish(exchange='exchange', routing_key=master_queue_name, body=json.dumps(ii))
+            
+            pairs = list(counts.items())
+            for ii in pairs:
+                # print("red send", ii)
+                channel.basic_publish(exchange='exchange', routing_key=master_cnt_queue_name, body=json.dumps(ii))
+            
             stop_msg = [end_msg, 1]
-            channel.basic_publish(exchange='exchange', routing_key=master_queue_name, body=json.dumps(stop_msg))
+            # channel.basic_publish(exchange='exchange', routing_key=master_queue_name, body=json.dumps(stop_msg))
+            channel.basic_publish(exchange='exchange', routing_key=master_cnt_queue_name, body=json.dumps(stop_msg))
             return 0
     else:
         if msg[0] not in results:
             results[msg[0]] = 0
-    
+            counts[msg[0]] = 0
+
         results[msg[0]] += sum(msg[1])
+        counts[msg[0]] += 1
     # print(msg[0], sum(msg[1]))
 
 channel.basic_consume(reduce_queue_name, on_message_callback=get_shuffle_dict, auto_ack=True)

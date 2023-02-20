@@ -2,6 +2,7 @@ import os
 import pika
 import json
 from sys import argv
+import math
 
 txt_folder = argv[1]
 # n = int(argv[2])
@@ -36,28 +37,59 @@ master_queue_name = 'master'
 channel.queue_declare(queue=master_queue_name, auto_delete=True)
 channel.queue_bind(exchange='exchange', queue=master_queue_name)
 
+master_cnt_queue_name = 'master_counts'
+channel.queue_declare(queue=master_cnt_queue_name, auto_delete=True)
+channel.queue_bind(exchange='exchange', queue=master_cnt_queue_name)
+
 cnts = {}
-red_counter = 0
+txts_cnt = {}
+
+red_cnts_counter = 0
 
 def get_res(channel, method, properties, body):
-    global red_counter
     msg = json.loads(body)
+    cnts[msg[0].lower()] = msg[1]
+
+def get_count(channel, method, properties, body):
+    global red_cnts_counter
+    msg = json.loads(body)
+    # print("master get cnt", msg)
     if msg[0] == end_msg:
-        red_counter += 1
-        if red_counter == k:
+        red_cnts_counter += 1
+        if red_cnts_counter == k:
             channel.stop_consuming()
             return 0
     else:
-        if msg[0] not in cnts:
-            cnts[msg[0].lower()] = 0
+        if msg[0] not in txts_cnt:
+            txts_cnt[msg[0].lower()] = 0
     
-        cnts[msg[0].lower()] = msg[1]
+        txts_cnt[msg[0].lower()] = msg[1]
 
 
 channel.basic_consume(master_queue_name, on_message_callback=get_res, auto_ack=True)
+channel.basic_consume(master_cnt_queue_name, on_message_callback=get_count, auto_ack=True)
 channel.start_consuming()
+
+tf = {}
+idf = {}
+
+words_cnt = sum(cnts.values())
+print("Total words:", words_cnt)
+words = cnts.keys()
+
+# print(cnts)
+# print()
+# print(txts_cnt)
+# print()
+
+for i in words:
+    tf[i] = cnts[i] / words_cnt
+
+for i in words:
+    idf[i] = math.log(n / txts_cnt[i], 10)
 
 ans = sorted(cnts.items())
 
 for i in ans:
-    print(i)
+    print(f'{i[0]}\t{i[1]}\t{tf[i[0]] * idf[i[0]]}')
+

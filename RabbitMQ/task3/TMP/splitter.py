@@ -19,6 +19,6 @@ channel.queue_declare(queue=mapper_queue_name, auto_delete=True)
 channel.queue_bind(exchange='exchange', queue=mapper_queue_name)
 
 for word in words:
-    channel.basic_publish(exchange='exchange', routing_key=mapper_queue_name, body=word)
+    channel.basic_publish(exchange='exchange', routing_key=mapper_queue_name, body=word.lower())
 
 channel.basic_publish(exchange='exchange', routing_key=mapper_queue_name, body=end_msg)

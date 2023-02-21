@@ -1,0 +1,252 @@
+{
+  "depth": 5,
+  "vertices": [
+    {
+      "id": 0,
+      "edge_ids": [0, 1],
+      "depth": 0
+    },
+    {
+      "id": 1,
+      "edge_ids": [0, 2, 3, 30],
+      "depth": 1
+    },
+    {
+      "id": 2,
+      "edge_ids": [1, 4, 5],
+      "depth": 1
+    },
+    {
+      "id": 3,
+      "edge_ids": [2, 6, 7, 20],
+      "depth": 2
+    },
+    {
+      "id": 4,
+      "edge_ids": [3, 18, 21],
+      "depth": 2
+    },
+    {
+      "id": 5,
+      "edge_ids": [4, 8, 9, 18, 22],
+      "depth": 2
+    },
+    {
+      "id": 6,
+      "edge_ids": [5, 10, 23],
+      "depth": 2
+    },
+    {
+      "id": 7,
+      "edge_ids": [6, 11, 24],
+      "depth": 3
+    },
+    {
+      "id": 8,
+      "edge_ids": [7, 12],
+      "depth": 3
+    },
+    {
+      "id": 9,
+      "edge_ids": [8, 16, 20, 25, 30],
+      "depth": 3
+    },
+    {
+      "id": 10,
+      "edge_ids": [9, 13, 19, 21, 23, 26, 31],
+      "depth": 3
+    },
+    {
+      "id": 11,
+      "edge_ids": [10, 19, 22],
+      "depth": 3
+    },
+    {
+      "id": 12,
+      "edge_ids": [11, 14, 27],
+      "depth": 4
+    },
+    {
+      "id": 13,
+      "edge_ids": [12, 15, 17, 24, 26, 28],
+      "depth": 4
+    },
+    {
+      "id": 14,
+      "edge_ids": [13, 25, 29],
+      "depth": 4
+    },
+    {
+      "id": 15,
+      "edge_ids": [14, 28],
+      "depth": 5
+    },
+    {
+      "id": 16,
+      "edge_ids": [15, 27, 29, 31],
+      "depth": 5
+    }
+  ],
+  "edges": [
+    {
+      "id": 0,
+      "vertex_ids": [0, 1],
+      "color": "gray"
+    },
+    {
+      "id": 1,
+      "vertex_ids": [0, 2],
+      "color": "gray"
+    },
+    {
+      "id": 2,
+      "vertex_ids": [1, 3],
+      "color": "gray"
+    },
+    {
+      "id": 3,
+      "vertex_ids": [1, 4],
+      "color": "gray"
+    },
+    {
+      "id": 4,
+      "vertex_ids": [2, 5],
+      "color": "gray"
+    },
+    {
+      "id": 5,
+      "vertex_ids": [2, 6],
+      "color": "gray"
+    },
+    {
+      "id": 6,
+      "vertex_ids": [3, 7],
+      "color": "gray"
+    },
+    {
+      "id": 7,
+      "vertex_ids": [3, 8],
+      "color": "gray"
+    },
+    {
+      "id": 8,
+      "vertex_ids": [5, 9],
+      "color": "gray"
+    },
+    {
+      "id": 9,
+      "vertex_ids": [5, 10],
+      "color": "gray"
+    },
+    {
+      "id": 10,
+      "vertex_ids": [6, 11],
+      "color": "gray"
+    },
+    {
+      "id": 11,
+      "vertex_ids": [7, 12],
+      "color": "gray"
+    },
+    {
+      "id": 12,
+      "vertex_ids": [8, 13],
+      "color": "gray"
+    },
+    {
+      "id": 13,
+      "vertex_ids": [10, 14],
+      "color": "gray"
+    },
+    {
+      "id": 14,
+      "vertex_ids": [12, 15],
+      "color": "gray"
+    },
+    {
+      "id": 15,
+      "vertex_ids": [13, 16],
+      "color": "gray"
+    },
+    {
+      "id": 16,
+      "vertex_ids": [9, 9],
+      "color": "green"
+    },
+    {
+      "id": 17,
+      "vertex_ids": [13, 13],
+      "color": "green"
+    },
+    {
+      "id": 18,
+      "vertex_ids": [4, 5],
+      "color": "blue"
+    },
+    {
+      "id": 19,
+      "vertex_ids": [10, 11],
+      "color": "blue"
+    },
+    {
+      "id": 20,
+      "vertex_ids": [3, 9],
+      "color": "yellow"
+    },
+    {
+      "id": 21,
+      "vertex_ids": [4, 10],
+      "color": "yellow"
+    },
+    {
+      "id": 22,
+      "vertex_ids": [5, 11],
+      "color": "yellow"
+    },
+    {
+      "id": 23,
+      "vertex_ids": [6, 10],
+      "color": "yellow"
+    },
+    {
+      "id": 24,
+      "vertex_ids": [7, 13],
+      "color": "yellow"
+    },
+    {
+      "id": 25,
+      "vertex_ids": [9, 14],
+      "color": "yellow"
+    },
+    {
+      "id": 26,
+      "vertex_ids": [10, 13],
+      "color": "yellow"
+    },
+    {
+      "id": 27,
+      "vertex_ids": [12, 16],
+      "color": "yellow"
+    },
+    {
+      "id": 28,
+      "vertex_ids": [13, 15],
+      "color": "yellow"
+    },
+    {
+      "id": 29,
+      "vertex_ids": [14, 16],
+      "color": "yellow"
+    },
+    {
+      "id": 30,
+      "vertex_ids": [1, 9],
+      "color": "red"
+    },
+    {
+      "id": 31,
+      "vertex_ids": [10, 16],
+      "color": "red"
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+Sender: LSF System <lsfadmin@polus-c1-ib.bmc.hpc.cs.msu.ru>
+Subject: Job 876950: <#BSUB -n 1;#BSUB -W 00:15;#BSUB -o "my_job.%J.out";#BSUB -e "my_job.%J.err";OMP_NUM_THREADS=1 ./a.out 3000;OMP_NUM_THREADS=2 ./a.out 3000;OMP_NUM_THREADS=4 ./a.out 3000;OMP_NUM_THREADS=8 ./a.out 3000;OMP_NUM_THREADS=16 ./a.out 3000;OMP_NUM_THREADS=32 ./a.out 3000;OMP_NUM_THREADS=64 ./a.out 3000;OMP_NUM_THREADS=128 ./a.out 3000> in cluster <MSUCluster> Done
+
+Job <#BSUB -n 1;#BSUB -W 00:15;#BSUB -o "my_job.%J.out";#BSUB -e "my_job.%J.err";OMP_NUM_THREADS=1 ./a.out 3000;OMP_NUM_THREADS=2 ./a.out 3000;OMP_NUM_THREADS=4 ./a.out 3000;OMP_NUM_THREADS=8 ./a.out 3000;OMP_NUM_THREADS=16 ./a.out 3000;OMP_NUM_THREADS=32 ./a.out 3000;OMP_NUM_THREADS=64 ./a.out 3000;OMP_NUM_THREADS=128 ./a.out 3000> was submitted from host <polus-ib.bmc.hpc.cs.msu.ru> by user <edu-cmc-sqi21-07> in cluster <MSUCluster> at Sun Apr 24 22:13:05 2022
+Job was executed on host(s) <polus-c1-ib.bmc.hpc.cs.msu.ru>, in queue <short>, as user <edu-cmc-sqi21-07> in cluster <MSUCluster> at Sun Apr 24 22:13:05 2022
+</home_edu/edu-cmc-sqi21/edu-cmc-sqi21-07> was used as the home directory.
+</home_edu/edu-cmc-sqi21/edu-cmc-sqi21-07> was used as the working directory.
+Started at Sun Apr 24 22:13:05 2022
+Terminated at Sun Apr 24 22:15:29 2022
+Results reported at Sun Apr 24 22:15:29 2022
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+#BSUB -n 1
+#BSUB -W 00:15
+#BSUB -o "my_job.%J.out"
+#BSUB -e "my_job.%J.err"
+OMP_NUM_THREADS=1 ./a.out 3000
+OMP_NUM_THREADS=2 ./a.out 3000
+OMP_NUM_THREADS=4 ./a.out 3000
+OMP_NUM_THREADS=8 ./a.out 3000
+OMP_NUM_THREADS=16 ./a.out 3000
+OMP_NUM_THREADS=32 ./a.out 3000
+OMP_NUM_THREADS=64 ./a.out 3000
+OMP_NUM_THREADS=128 ./a.out 3000
+
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   575.62 sec.
+    Max Memory :                                 91 MB
+    Average Memory :                             58.00 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                132
+    Run time :                                   146 sec.
+    Turnaround time :                            144 sec.
+
+The output (if any) follows:
+
+
+/////////////////////////////////
+Max threads count 1
+Size = 3000
+
+Generation time: 12.0306
+Hosehold time: 20.2859
+Gauss time: 0.0173325
+Algorithm time: 20.3032
+Total time: 32.3479
+
+||Ax-b|| = 8.45106e-10
+Solution difference: 2.26826e-11
+
+/////////////////////////////////
+Max threads count 2
+Size = 3000
+
+Generation time: 12.0371
+Hosehold time: 10.3162
+Gauss time: 0.0223874
+Algorithm time: 10.3386
+Total time: 22.3907
+
+||Ax-b|| = 8.39967e-10
+Solution difference: 3.23669e-11
+
+/////////////////////////////////
+Max threads count 4
+Size = 3000
+
+Generation time: 12.0413
+Hosehold time: 5.20461
+Gauss time: 0.0214607
+Algorithm time: 5.22607
+Total time: 17.2823
+
+||Ax-b|| = 8.43189e-10
+Solution difference: 6.19023e-11
+
+/////////////////////////////////
+Max threads count 8
+Size = 3000
+
+Generation time: 12.021
+Hosehold time: 2.95217
+Gauss time: 0.0217684
+Algorithm time: 2.97394
+Total time: 15.01
+
+||Ax-b|| = 8.3546e-10
+Solution difference: 2.87887e-11
+
+/////////////////////////////////
+Max threads count 16
+Size = 3000
+
+Generation time: 12.0317
+Hosehold time: 1.9878
+Gauss time: 0.0406901
+Algorithm time: 2.02849
+Total time: 14.0753
+
+||Ax-b|| = 8.38587e-10
+Solution difference: 1.96045e-11
+
+/////////////////////////////////
+Max threads count 32
+Size = 3000
+
+Generation time: 12.0219
+Hosehold time: 1.55211
+Gauss time: 0.0444855
+Algorithm time: 1.59659
+Total time: 13.6336
+
+||Ax-b|| = 8.38868e-10
+Solution difference: 9.2471e-12
+
+/////////////////////////////////
+Max threads count 64
+Size = 3000
+
+Generation time: 12.0285
+Hosehold time: 1.44654
+Gauss time: 0.0614618
+Algorithm time: 1.508
+Total time: 13.5516
+
+||Ax-b|| = 8.26143e-10
+Solution difference: 1.14185e-11
+
+/////////////////////////////////
+Max threads count 128
+Size = 3000
+
+Generation time: 12.0267
+Hosehold time: 2.58864
+Gauss time: 0.0797079
+Algorithm time: 2.66835
+Total time: 14.7101
+
+||Ax-b|| = 8.4438e-10
+Solution difference: 1.17868e-11
+
+
+PS:
+
+Read file <my_job.876950.err> for stderr output of this job.
+

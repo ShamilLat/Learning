@@ -1,0 +1,6 @@
+#BSUB -n 1
+#BSUB -W 00:15
+#BSUB -o "job.%J.out"
+#BSUB -e "job.%J.err"
+#BSUB -R "affinity[core(16)]"
+OMP_NUM_THREADS=32 ./a.out 100 50

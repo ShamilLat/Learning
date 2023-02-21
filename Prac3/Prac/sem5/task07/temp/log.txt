@@ -1,0 +1,70 @@
+2021.12.23 12:00:01: Graph 0, Generation Started
+2021.12.23 12:00:01: Graph 1, Generation Started
+2021.12.23 12:00:01: Graph 2, Generation Started
+2021.12.23 12:00:01: Graph 3, Generation Started
+2021.12.23 12:00:01: Graph 4, Generation Started
+2021.12.23 12:00:01: Graph 5, Generation Started
+2021.12.23 12:00:01: Graph 6, Generation Started
+2021.12.23 12:00:01: Graph 7, Generation Started
+2021.12.23 12:00:01: Graph 8, Generation Started
+2021.12.23 12:00:01: Graph 9, Generation Started
+2021.12.23 12:00:09: Graph 9, Generation Ended {
+  depth: 6,
+  vertices: 748, [1, 4, 16, 50, 125, 245, 307],
+  edges: 1451, {gray: 747, green: 91, blue: 177, yellow: 371, red: 65}
+}
+
+2021.12.23 12:00:11: Graph 6, Generation Ended {
+  depth: 6,
+  vertices: 804, [1, 4, 15, 51, 131, 260, 342],
+  edges: 1560, {gray: 803, green: 73, blue: 211, yellow: 406, red: 67}
+}
+
+2021.12.23 12:00:11: Graph 7, Generation Ended {
+  depth: 6,
+  vertices: 818, [1, 4, 16, 52, 134, 271, 340],
+  edges: 1549, {gray: 817, green: 78, blue: 181, yellow: 411, red: 62}
+}
+
+2021.12.23 12:00:13: Graph 5, Generation Ended {
+  depth: 6,
+  vertices: 857, [1, 4, 16, 51, 141, 277, 367],
+  edges: 1648, {gray: 856, green: 79, blue: 212, yellow: 427, red: 74}
+}
+
+2021.12.23 12:00:13: Graph 8, Generation Ended {
+  depth: 6,
+  vertices: 863, [1, 4, 15, 49, 139, 279, 376],
+  edges: 1658, {gray: 862, green: 92, blue: 213, yellow: 413, red: 78}
+}
+
+2021.12.23 12:00:13: Graph 1, Generation Ended {
+  depth: 6,
+  vertices: 870, [1, 4, 15, 50, 144, 284, 372],
+  edges: 1640, {gray: 869, green: 87, blue: 200, yellow: 430, red: 54}
+}
+
+2021.12.23 12:00:14: Graph 3, Generation Ended {
+  depth: 6,
+  vertices: 885, [1, 4, 16, 55, 137, 276, 396],
+  edges: 1661, {gray: 884, green: 92, blue: 199, yellow: 426, red: 60}
+}
+
+2021.12.23 12:00:14: Graph 0, Generation Ended {
+  depth: 6,
+  vertices: 897, [1, 4, 16, 56, 145, 292, 383],
+  edges: 1747, {gray: 896, green: 84, blue: 251, yellow: 449, red: 67}
+}
+
+2021.12.23 12:00:16: Graph 2, Generation Ended {
+  depth: 6,
+  vertices: 953, [1, 4, 16, 58, 154, 305, 415],
+  edges: 1842, {gray: 952, green: 110, blue: 235, yellow: 478, red: 67}
+}
+
+2021.12.23 12:00:18: Graph 4, Generation Ended {
+  depth: 6,
+  vertices: 994, [1, 4, 16, 58, 160, 325, 430],
+  edges: 1893, {gray: 993, green: 90, blue: 241, yellow: 490, red: 79}
+}
+

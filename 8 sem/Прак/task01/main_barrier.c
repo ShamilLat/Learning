@@ -20,6 +20,7 @@ void swap(int* a, int* b) {
 void transpose(int** block, int block_size) {
   for (int i = 0; i < block_size; i++) {
     for (int j = i + 1; j < block_size; j++) {
+#pragma omp barrier
       swap(&block[i][j], &block[j][i]);
     }
   }
@@ -84,22 +85,27 @@ int main(int argc, char** argv) {
   //
   omp_set_num_threads(block_cnt);
 
-#pragma omp parallel for private(i) shared(matrix)
+#pragma omp parallel for pivate(i) shared(matrix)
   for (int i = 0; i < block_cnt; i++) {
+#pragma omp barrier
     int** block = calloc(block_size, sizeof(*block));
     for (int i = 0; i < block_size; i++) {
       block[i] = calloc(block_size, sizeof(**block));
     }
 
+#pragma omp barrier
     get_block(block, matrix, block_size, i, matrix_size / block_size);
+#pragma omp barrier
     transpose(block, block_size);
 #pragma omp barrier
     put_block(block, matrix, block_size, i, matrix_size / block_size);
 
+#pragma omp barrier
     for (int i = 0; i < block_size; i++) {
       free(block[i]);
     }
     free(block);
+#pragma omp barrier
   }
 
   //

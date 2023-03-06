@@ -1,0 +1,6 @@
+#BSUB -m polus-c3-ib
+#BSUB -W 00:15
+#BSUB -o "main_barrier.%J.out"
+#BSUB -e "main_barrier.%J.err"
+#BSUB -R "affinity[core(1)]"
+OMP_NUM_THREADS=2 ./main_barrier 30720 15360

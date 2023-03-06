@@ -1,0 +1,5 @@
+#BSUB -m polus-c3-ib
+#BSUB -W 00:15
+#BSUB -o "main.%J.out"
+#BSUB -e "main.%J.err"
+OMP_NUM_THREADS=1 ./main 30720 30720

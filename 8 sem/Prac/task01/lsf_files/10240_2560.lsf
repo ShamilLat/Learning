@@ -1,6 +1,0 @@
-#BSUB -m polus-c3-ib
-#BSUB -W 00:15
-#BSUB -o "main.%J.out"
-#BSUB -e "main.%J.err"
-#BSUB -R "affinity[core(2)]"
-OMP_NUM_THREADS=4 ./main 10240 2560

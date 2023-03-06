@@ -5,12 +5,14 @@
 
 int main() {
   std::string file_format = ".lsf", file_name = "";
-  int nums[3] = {10240, 30720, 51200};
+  int nums[3] = {5760, 17280, 34560};
+  int omp_nums[5] = {1, 2, 4, 6, 8};
   for (int j = 0; j < 3; j++) {
     int size = nums[j];
-    for (int omp_num = 1; omp_num <= 64; omp_num *= 2) {
+
+    for (int i = 0; i < 5; i++) {
       std::stringstream ss;
-      ss << size << "_" << size / omp_num;
+      ss << size << "_" << size / omp_nums[i];
       file_name = ss.str() + file_format;
       ss.clear();
       std::string cmd =
@@ -20,9 +22,9 @@ int main() {
   }
   for (int j = 0; j < 3; j++) {
     int size = nums[j];
-    for (int omp_num = 1; omp_num <= 64; omp_num *= 2) {
+    for (int i = 0; i < 5; i++) {
       std::stringstream ss;
-      ss << size << "_" << size / omp_num << "_barrier";
+      ss << size << "_" << size / omp_nums[i] << "_barrier";
       file_name = ss.str() + file_format;
       ss.clear();
       std::string cmd =

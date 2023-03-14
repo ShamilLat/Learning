@@ -3,4 +3,4 @@
 #BSUB -o "main.%J.out"
 #BSUB -e "main.%J.err"
 #BSUB -R "affinity[core(2)]"
-OMP_NUM_THREADS=4 ./main 17280 8640
+OMP_NUM_THREADS=4 ./main 14112 7056

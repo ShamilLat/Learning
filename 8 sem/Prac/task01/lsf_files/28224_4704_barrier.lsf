@@ -2,5 +2,5 @@
 #BSUB -W 00:15
 #BSUB -o "main_barrier.%J.out"
 #BSUB -e "main_barrier.%J.err"
-#BSUB -R "affinity[core(8)]"
-OMP_NUM_THREADS=16 ./main 5760 1440
+#BSUB -R "affinity[core(18)]"
+OMP_NUM_THREADS=36 ./main_barrier 28224 4704

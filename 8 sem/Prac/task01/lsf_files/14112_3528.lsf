@@ -2,5 +2,5 @@
 #BSUB -W 00:15
 #BSUB -o "main.%J.out"
 #BSUB -e "main.%J.err"
-#BSUB -R "affinity[core(2)]"
-OMP_NUM_THREADS=4 ./main 34560 17280
+#BSUB -R "affinity[core(8)]"
+OMP_NUM_THREADS=16 ./main 14112 3528

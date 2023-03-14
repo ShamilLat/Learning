@@ -4,8 +4,8 @@
 #include <string>
 
 int main() {
-  system("rm *.lsf");
-  
+  std::system("rm *.lsf");
+
   std::string base =
       "#BSUB -m polus-c3-ib\n#BSUB -W 00:15\n#BSUB -o \"main.%J.out\"\n#BSUB "
       "-e \"main.%J.err\"\n";
@@ -18,11 +18,11 @@ int main() {
   std::string server_file_barrier = "./main_barrier";
   std::string file_format = ".lsf", file_name = "";
 
-  int nums[3] = {5760, 17280, 34560};
-  int omp_nums[5] = {1, 2, 4, 6, 8};
+  int nums[3] = {7056, 14112, 28224};
+  int omp_nums[5] = {1, 2, 4, 6};
   for (int j = 0; j < 3; j++) {
     int size = nums[j];
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
       std::stringstream ss;
       ss << size << "_" << size / omp_nums[i];
       file_name = ss.str() + file_format;
@@ -30,7 +30,8 @@ int main() {
       std::ofstream ccout(file_name);
       ccout << base;
       if (omp_nums[i] > 1) {
-        ccout << core_flag << omp_nums[i] * omp_nums[i] / 2 << ")]\"\n";
+        ccout << core_flag << omp_nums[i] * omp_nums[i] / 2 + omp_nums[i] % 2
+              << ")]\"\n";
       }
       ccout << num_threads << omp_nums[i] * omp_nums[i] << " " << server_file
             << " " << size << " " << size / omp_nums[i] << "\n";
@@ -39,7 +40,7 @@ int main() {
   }
   for (int j = 0; j < 3; j++) {
     int size = nums[j];
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
       std::stringstream ss;
       ss << size << "_" << size / omp_nums[i] << "_barrier";
       file_name = ss.str() + file_format;
@@ -47,10 +48,12 @@ int main() {
       std::ofstream ccout(file_name);
       ccout << base_barrier;
       if (omp_nums[i] > 1) {
-        ccout << core_flag << omp_nums[i] * omp_nums[i] / 2 << ")]\"\n";
+        ccout << core_flag << omp_nums[i] * omp_nums[i] / 2 + omp_nums[i] % 2
+              << ")]\"\n";
       }
-      ccout << num_threads << omp_nums[i] * omp_nums[i] << " " << server_file
-            << " " << size << " " << size / omp_nums[i] << "\n";
+      ccout << num_threads << omp_nums[i] * omp_nums[i] << " "
+            << server_file_barrier << " " << size << " " << size / omp_nums[i]
+            << "\n";
       printf("%d %d\n", size, size / omp_nums[i]);
     }
   }

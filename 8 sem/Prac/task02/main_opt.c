@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
   int buf_size = 0;
   double start, stop, all_time;
 
-  MPI_Status status;
+  MPI_Request request[2] = {MPI_REQUEST_NULL, MPI_REQUEST_NULL};
 
   MPI_Init(&argc, &argv);
 
@@ -43,15 +43,14 @@ int main(int argc, char** argv) {
   }
 
   for (int iter = 0; iter < iterations_number; iter++) {
-    if (rank == 0) {
-      MPI_Recv(rv, buf_size, MPI_INT, numprocs - 1, 0, MPI_COMM_WORLD, &status);
-      MPI_Send(r, buf_size, MPI_INT, rank + 1, 0, MPI_COMM_WORLD);
-      sum_buf(r, rv, v, buf_size);
-    } else {
-      MPI_Send(r, buf_size, MPI_INT, (rank + 1) % numprocs, 0, MPI_COMM_WORLD);
-      MPI_Recv(rv, buf_size, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, &status);
-      sum_buf(r, rv, v, buf_size);
-    }
+    MPI_Irecv(rv, buf_size, MPI_INT, (rank - 1 + numprocs) % numprocs, 0,
+              MPI_COMM_WORLD, &request[1]);
+    MPI_Isend(r, buf_size, MPI_INT, (rank + 1) % numprocs, 0, MPI_COMM_WORLD,
+              &request[0]);
+    MPI_Wait(&request[1], MPI_STATUS_IGNORE);
+    sum_buf(r, rv, v, buf_size);
+
+    MPI_Wait(&request[0], MPI_STATUS_IGNORE);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);

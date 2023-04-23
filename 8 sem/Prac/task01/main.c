@@ -127,8 +127,6 @@ int main(int argc, char** argv) {
 
   double end_time = omp_get_wtime();
 
-  //
-
   // print_m(matrix, matrix_size);
 
   printf("check %s\n", check_m(matrix, matrix_size) ? "false" : "true");

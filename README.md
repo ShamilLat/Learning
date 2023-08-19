@@ -1,3 +1,3 @@
-# MSU_learning
+# Learning
 
-This is my folder with my programming practicum in university!
+This is my folder with my programming practicum!

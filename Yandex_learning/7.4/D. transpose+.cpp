@@ -180,9 +180,9 @@ int main() {
   int vector_pos = 0;
   std::cout << "J Here" << std::endl;
 
-  int min_count_transpose = std::max(
-      total_transposes + count_transposes[movable_rl_numbers[vector_pos]],
-      total_after_transposes);
+  int min_count_transpose = total_transposes +
+                            count_transposes[movable_rl_numbers[vector_pos]] +
+                            total_after_transposes;
   int left_numbers_t = 0, right_numbers_t = 0;
   int last_lr_moves = 0, last_lr_number = 0;
   for (int i = min_left; i < n; i++) {
@@ -229,19 +229,6 @@ int main() {
       std::cout << "C: " << tmp + total_transposes << std::endl;
     }
   }
-
-  // for (int i = min_left; i < n; i++) {
-  //   if (numbers_half[i] == 1) {
-  //     inv_after_sum -= inv_before[i];
-  //     int tmp = current_left_move * current_right_move + count_transposes[i]
-  //     +
-  //               count_transposes[movable_right_numbers[vector_pos]] +
-  //               inv_after_sum + inv_before_sum;
-  //   } else if (numbers_half[i] == 0) {
-  //     int tmp = count_transposes[movable_right_numbers[vector_pos]];
-  //     inv_before_sum -= inv_before[i];
-  //   }
-  // }
 
   std::cout << std::setw(13) << "numbers: ";
   for (int i = 0; i < n; i++) {

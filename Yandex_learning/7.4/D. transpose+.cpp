@@ -1,14 +1,6 @@
 #include <algorithm>
-#include <iomanip>
 #include <iostream>
 #include <vector>
-
-std::ostream& operator<<(std::ostream& out, std::vector<int>& a) {
-  for (int i = 0; i < a.size(); i++) {
-    out << a[i] << " ";
-  }
-  return out;
-}
 
 struct NumbersData {
   NumbersData() {}
@@ -17,15 +9,6 @@ struct NumbersData {
     before.resize(n, 0);
     after_bigger.resize(n, 0);
     before_smaller.resize(n, 0);
-  }
-
-  friend std::ostream& operator<<(std::ostream& out, NumbersData& numd) {
-    out << numd.after << "\n"
-        << numd.before << "\n"
-        << numd.after_bigger << "\n"
-        << numd.before_smaller;
-
-    return out;
   }
 
   std::vector<int> after;

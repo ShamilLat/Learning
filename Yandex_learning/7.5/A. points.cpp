@@ -15,7 +15,7 @@ double findDistance(std::vector<std::pair<int, int>>& points) {
   std::sort(points.begin(), points.end());
 
   if (points.size() <= 1) {
-    return 0xffffffff;
+    return 0x7fffffff;
   } else if (points.size() == 2) {
     return distance(points[0], points[1]);
   }

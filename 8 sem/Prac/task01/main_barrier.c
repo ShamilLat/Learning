@@ -17,7 +17,6 @@ void swap(int* a, int* b) {
   *b = c;
 }
 
-
 void transpose(int** block, int block_size) {
   for (int i = 0; i < block_size; i++) {
     for (int j = i + 1; j < block_size; j++) {

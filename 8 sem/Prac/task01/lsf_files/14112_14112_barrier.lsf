@@ -1,0 +1,5 @@
+#BSUB -m polus-c3-ib
+#BSUB -W 00:15
+#BSUB -o "main_barrier.%J.out"
+#BSUB -e "main_barrier.%J.err"
+OMP_NUM_THREADS=1 ./main_barrier 14112 14112

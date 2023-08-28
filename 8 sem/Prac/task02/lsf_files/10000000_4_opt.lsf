@@ -1,5 +1,0 @@
-#BSUB -n 4
-#BSUB -W 00:15
-#BSUB -o "mpi_opt.%J.out"
-#BSUB -e "mpi_opt.%J.err"
-mpiexec ./mpi_opt 10000000

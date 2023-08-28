@@ -1,7 +1,0 @@
-2021.12.22 16:29:10: Graph 0, Generation Started
-2021.12.22 16:29:23: Graph 0, Generation Ended {
-  depth: 6,
-  vertices: 995, [1, 4, 16, 55, 156, 325, 438],
-  edges: 1913, {gray: 994, green: 95, blue: 253, yellow: 497, red: 74}
-}
-

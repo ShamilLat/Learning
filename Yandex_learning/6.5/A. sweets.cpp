@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iostream>
+#include <stdint.h>
 
 int main() {
   int n;

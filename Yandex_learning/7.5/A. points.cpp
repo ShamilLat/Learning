@@ -42,9 +42,9 @@ double findDistance(std::vector<std::pair<int, int>>& points) {
             [](auto& a, auto& b) { return a.second < b.second; });
 
   double new_min_d = min_d;
-  for (auto& i : y_vec) {
-    for (int j = 1; j <= 7; j++) {
-      new_min_d = std::min(distance(i, *(&i + j)), new_min_d);
+  for (int i = 0; i < y_vec.size(); i++) {
+    for (int j = 1; j <= 7 && i + j < y_vec.size(); j++) {
+      new_min_d = std::min(distance(y_vec[i], y_vec[i + j]), new_min_d);
     }
   }
 

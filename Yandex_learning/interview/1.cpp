@@ -1,14 +1,14 @@
 #include <algorithm>
 #include <iostream>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 int main() {
   std::string s;
   std::cin >> s;
 
-  std::map<char, int> count_symbols;
+  std::unordered_map<char, int> count_symbols;
 
   for (auto& i : s) {
     count_symbols[i] = 0;

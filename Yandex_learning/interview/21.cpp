@@ -3,13 +3,14 @@
 
 class TreeNode {
  public:
+  TreeNode() : val(0), left(nullptr), right(nullptr) {}
+  TreeNode(int64_t x) : val(x), left(nullptr), right(nullptr) {}
+  TreeNode(int64_t x, TreeNode* left_pointer, TreeNode* right_pointer)
+      : val(x), left(left_pointer), right(right_pointer) {}
+
   int64_t val;
   TreeNode* left;
   TreeNode* right;
-  TreeNode() : val(0), left(nullptr), right(nullptr) {}
-  TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
-  TreeNode(int x, TreeNode* left, TreeNode* right)
-      : val(x), left(left), right(right) {}
 };
 
 class Solution {

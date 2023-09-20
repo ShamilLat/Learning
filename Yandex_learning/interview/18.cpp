@@ -6,18 +6,18 @@
 bool f(const std::vector<int>& vec) {
   int min = 0x7fffffff;
   int max = 0x80000000;
-  std::unordered_set<int> p;
+  std::unordered_set<int> points;
 
   for (int i = 0; i < vec.size(); i++) {
     min = std::min(vec[i], min);
     max = std::max(vec[i], max);
 
-    p.insert(vec[i]);
+    points.insert(vec[i]);
   }
 
   int dist = max + min;
   for (int i = 0; i < vec.size(); i++) {
-    if (!p.contains(dist - vec[i])) {
+    if (!points.contains(dist - vec[i])) {
       return false;
     }
   }

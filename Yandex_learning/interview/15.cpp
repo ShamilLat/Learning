@@ -3,13 +3,37 @@
 #include <unordered_map>
 #include <vector>
 
-void print_p(const int& first, const int& second) {
-  if (first != second) {
-    std::cout << first << "-" << second << std::endl;
-  } else {
-    std::cout << first << std::endl;
+using namespace std;
+
+class Solution {
+ public:
+  vector<string> summaryRanges(vector<int>& nums) {
+    vector<string> res;
+
+    if (nums.size() == 0) {
+      return res;
+    }
+    int first = nums[0], second = nums[0];
+    for (int i = 1; i < nums.size(); i++) {
+      if (nums[i] != second + 1) {
+        if (first != second) {
+          res.push_back(to_string(first) + "->" + to_string(second));
+        } else {
+          res.push_back(to_string(first));
+        }
+        first = nums[i];
+      }
+      second = nums[i];
+    }
+    if (first != second) {
+      res.push_back(to_string(first) + "->" + to_string(second));
+    } else {
+      res.push_back(to_string(first));
+    }
+
+    return res;
   }
-}
+};
 
 int main() {
   int n;
@@ -19,17 +43,12 @@ int main() {
     std::cin >> vec[i];
   }
 
-  std::sort(vec.begin(), vec.end());
+  Solution solv;
 
-  int first = vec[0], second = vec[0];
-  for (int i = 1; i < vec.size(); i++) {
-    if (vec[i] != second + 1) {
-      print_p(first, second);
-      first = vec[i];
-    }
-    second = vec[i];
+  auto res_vec = solv.summaryRanges(vec);
+  for (auto& it : res_vec) {
+    std::cout << it << "\n";
   }
-  print_p(first, second);
 
   return 0;
 }

@@ -5,6 +5,13 @@
 
 using namespace std;
 
+/*
+Дан список чисел. Вывести в порядке возрастания все числовые
+последовательности в нем.
+
+Пример: [1, 3, 7, 11, 8, 2] -> "1-3, 7-8, 11".
+*/
+
 class Solution {
  public:
   vector<string> summaryRanges(vector<int>& nums) {

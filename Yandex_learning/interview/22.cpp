@@ -2,6 +2,7 @@
 #include <ostream>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 template <typename Type>
 std::ostream& operator<<(std::ostream& out, std::unordered_set<Type>& values) {
@@ -25,9 +26,11 @@ int main() {
   std::unordered_map<int, std::unordered_set<int>> points_y;
   int n;
   std::cin >> n;
+  std::vector<std::pair<int, int>> points(n);
   int x, y;
   for (int i = 0; i < n; i++) {
     std::cin >> x >> y;
+    points[i] = {x, y};
     if (!points_x.contains(x)) {
       points_x.insert({x, std::unordered_set<int>()});
     }
@@ -38,6 +41,24 @@ int main() {
     points_y[y].insert(x);
   }
 
-  std::cout << points_x << std::endl;
-  std::cout << points_y << std::endl;
+  int cnt = 0;
+
+  for (int i = 0; i < n; i++) {
+    for (int j = i + 1; j < n; j++) {
+      if (points[i].first == points[j].first ||
+          points[i].second == points[j].second) {
+        continue;
+      } else {
+        if (points_x[points[i].first].contains(points[j].second) &&
+            points_x[points[j].first].contains(points[i].second)) {
+          cnt++;
+        }
+      }
+    }
+  }
+  cnt /= 2;
+  std::cout << cnt << "\n";
+
+  // std::cout << points_x << std::endl;
+  // std::cout << points_y << std::endl;
 }

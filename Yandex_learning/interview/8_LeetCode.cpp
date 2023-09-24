@@ -4,6 +4,11 @@
 
 using namespace std;
 
+/*
+Возвращает количество подмассивов в массиве, сумма элементов
+которых равна заданному k
+*/
+
 class Solution {
  public:
   int subarraySum(vector<int>& nums, int k) {

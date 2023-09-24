@@ -3,6 +3,11 @@
 
 using namespace std;
 
+/*
+Проверить, что строка является палиндромом, если учитывать
+только буквы в lowercase и цифры
+*/
+
 class Solution {
  public:
   bool isPalindrome(string s) {

@@ -38,8 +38,12 @@ to setup-turtle-7
   set c1 int((c1 + 0.5) / 1)
   set c2 int((c2 + 0.5) / 1)
   ifelse dy > 0
-  [set m m + (6 + c2 - c1) mod 6]
-  [set m m + (6 + c1 - c2) mod 6]
+  [
+    set m m + (6 + c2 - c1) mod 6
+ ]
+  [
+    set m m + (6 + c1 - c2) mod 6
+  ]
   ifelse (c1 + c2) mod 2 = 1
   [set color lime]
   [set color red]

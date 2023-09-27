@@ -12,37 +12,36 @@ to setup
   set m 0
 end
 
+to setup-laplas
+  clear-all
+  ask patches [
+    ifelse pxcor mod 2 = 0
+    [
+      ifelse pycor mod 2 = 0
+      [set pcolor blue]
+      [set pcolor sky]
+    ]
+    [
+      ifelse pycor mod 2 = 0
+      [set pcolor violet]
+      [set pcolor cyan]
+    ]
+  ]
+  reset-ticks
+  set n 0
+  set m 0
+end
+
 to go
   create-turtles turtles-number
   [setup-turtle]
   tick
 end
 
-to go-7
+to go-laplas
   create-turtles turtles-number
-  [setup-turtle-7]
+  [setup-turtle-laplas]
   tick
-end
-
-to setup-turtle-7
-  set shape "circle"
-  set size 0.1
-  set color black
-  set pen-size 4
-  setxy random-xcor random-ycor
-  pendown
-  let c1 ycor
-  fd turtles-long
-  let c2 ycor
-  set n n + 1
-  set c1 int((c1 + 0.5) / 1)
-  set c2 int((c2 + 0.5) / 1)
-  ifelse dy > 0
-  [set m m + (6 + c2 - c1) mod 6]
-  [set m m + (6 + c1 - c2) mod 6]
-  ifelse (c1 + c2) mod 2 = 1
-  [set color lime]
-  [set color red]
 end
 
 to setup-turtle
@@ -52,18 +51,51 @@ to setup-turtle
   set pen-size 4
   setxy random-xcor random-ycor
   pendown
-  let c1 pcolor
+
+  let c1 floor(ycor + 0.5)
   fd turtles-long
-  let c2 pcolor
+  let c2 floor(ycor + 0.5)
   set n n + 1
-  ifelse c1 = c2
+
+  ifelse dy > 0
+  [set m m + (6 + c2 - c1) mod 6]
+  [set m m + (6 + c1 - c2) mod 6]
+  ifelse (c1 + c2) mod 2 = 1
+  [set color lime]
   [set color red]
-  [set m m + 1
-   set color lime]
+end
+
+to setup-turtle-laplas
+  set shape "circle"
+  set size 0.1
+  set color black
+  set pen-size 4
+  setxy random-xcor random-ycor
+  pendown
+
+  let x0 floor(xcor + 0.5)
+  let y0 floor(ycor + 0.5)
+  fd turtles-long
+  let x1 floor(xcor + 0.5)
+  let y1 floor(ycor + 0.5)
+  set n n + 1
+
+  ifelse x0 = x1 and y0 = y1
+  [set color lime]
+  [
+    set color red
+    set m m + 1
+  ]
 end
 
 to-report approx-pi
-  report 2 * turtles-long * n / m
+  ifelse laplas
+  [
+    report (4 * turtles-long - turtles-long * turtles-long) * n / m
+  ]
+  [
+    report 2 * turtles-long * n / m
+  ]
 end
 
 to-report model-error
@@ -75,7 +107,7 @@ to-report theory-error
 end
 
 to-report probability
-  report m / n
+  report 2 * turtles-long / approx-pi
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -138,10 +170,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-100
-29
-163
-62
+23
+76
+89
+109
 NIL
 go
 T
@@ -166,10 +198,10 @@ approx-pi
 11
 
 PLOT
-178
-26
-573
-163
+216
+27
+611
+164
 Error plot
 n
 error
@@ -186,39 +218,11 @@ PENS
 
 MONITOR
 450
-394
+344
 543
-439
+389
 NIL
 count turtles
-17
-1
-11
-
-BUTTON
-100
-82
-163
-115
-NIL
-go-7\n
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-MONITOR
-450
-342
-590
-387
-NIL
-probability
 17
 1
 11
@@ -237,6 +241,62 @@ turtles-long
 1
 NIL
 HORIZONTAL
+
+BUTTON
+98
+30
+207
+63
+NIL
+setup-laplas
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+450
+395
+507
+440
+NIL
+m
+17
+1
+11
+
+BUTTON
+98
+76
+207
+109
+NIL
+go-laplas\n
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+0
+
+SWITCH
+612
+294
+715
+327
+laplas
+laplas
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?

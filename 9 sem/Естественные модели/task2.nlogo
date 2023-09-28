@@ -234,9 +234,9 @@ SLIDER
 254
 turtles-long
 turtles-long
-0
+0.1
 3
-0.4
+1.0
 0.1
 1
 NIL
@@ -294,7 +294,7 @@ SWITCH
 327
 laplas
 laplas
-0
+1
 1
 -1000
 

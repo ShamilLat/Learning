@@ -1,5 +1,5 @@
 turtles-own [my-x]
-globals [dist-x dist-y new-max-y]
+globals [dist-x dist-y max-y min-y]
 
 
 to setup
@@ -7,11 +7,9 @@ to setup
   ask patches [set pcolor white]
 
   set dist-x (max-x? - min-x?)
-  set new-max-y max-y?
-  find-max-y
-  set max-y? new-max-y
+  find-min-max-y
 
-  set dist-y (max-y? - min-y?)
+  set dist-y (max-y - min-y)
   draw-target
   create-turtles turtles-number
   [
@@ -44,15 +42,22 @@ to move-turtle
   ]
 end
 
-to find-max-y
+to find-min-max-y
   let i 0
   let rep-cnt (dist-x * 200)
+  let x min-x?
+  set min-y func x
+  set max-y func x
   repeat rep-cnt [
     set i i + 1
-    let x (min-x? + (i / 200))
-    if new-max-y < func x
+    set x (min-x? + (i / 200))
+    if max-y < func x
     [
-      set new-max-y round func x
+      set max-y ceiling func x
+    ]
+    if min-y > func x
+    [
+      set min-y floor func x
     ]
   ]
 end
@@ -74,9 +79,7 @@ to draw-target
 end
 
 to-report func [x]
-  ifelse target = "unimodal"
-  [report (2 * x - 1) * (2 * x - 1)]
-  [report (2 + cos(720 * x) + cos(2000 * x)) / 4]
+  report runresult target
 end
 
 to-report get-xcor [x]
@@ -84,26 +87,20 @@ to-report get-xcor [x]
 end
 
 to-report get-ycor [y]
-  let new-y min-pycor + (y - min-y?) / dist-y * (max-pycor - min-pycor)
-
-  ;if new-y > max-y?
-  ;[set max-y? new-y]
-
-  ;if new-y < min-y?
-  ;[set min-y? new-y]
-
-  report new-y
+  report min-pycor + (y - min-y) / dist-y * (max-pycor - min-pycor)
 end
 
 to-report best-target
   let y min [func my-x] of turtles
-  report log y 10
+  report log abs (y - min-y) 10
+  ;report y
 end
 
 to-report average-target
   let s reduce + [func my-x] of turtles
   let y s / count turtles
-  report log y 10
+  report log abs (y - min-y) 10
+  ;report y
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -149,16 +146,6 @@ NIL
 NIL
 NIL
 1
-
-CHOOSER
-807
-11
-899
-56
-target
-target
-"unimodal" "multimodal"
-0
 
 SLIDER
 907
@@ -206,7 +193,7 @@ theta
 theta
 0.0001
 10
-1.0
+0.48028925378937887
 0.1
 1
 NIL
@@ -236,7 +223,7 @@ SWITCH
 186
 cool?
 cool?
-0
+1
 1
 -1000
 
@@ -253,9 +240,9 @@ Number
 
 PLOT
 684
-221
+286
 1053
-430
+495
 Target
 NIL
 NIL
@@ -290,47 +277,68 @@ PENS
 
 INPUTBOX
 685
-450
+515
 745
-510
+575
 min-x?
-0.0
+-2.0
 1
 0
 Number
 
 INPUTBOX
 760
-450
+515
 822
-510
+575
 max-x?
-2.1
+2.0
 1
 0
 Number
 
 INPUTBOX
-685
-525
-745
-585
-min-y?
+684
+212
+1052
+272
+target
+sin (360 * x) + cos (720 * x)
+1
+0
+String
+
+TEXTBOX
+681
+676
+950
+710
+(2 + cos (720 * x) + cos (2000 * x)) / 4
+14
 0.0
 1
-0
-Number
 
-INPUTBOX
-760
-526
-822
-586
-max-y?
-10.0
+MONITOR
+689
+595
+746
+640
+NIL
+min-y
+17
 1
-0
-Number
+11
+
+MONITOR
+760
+595
+817
+640
+NIL
+max-y
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

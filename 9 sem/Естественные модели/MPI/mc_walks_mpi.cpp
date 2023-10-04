@@ -25,25 +25,50 @@ int do_walk(int a, int b, int x, double p, double& t) {
 }
 
 void run_mc(int a, int b, int x, double p, int N) {
+  int numprocs, rank;
+  MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  srand(2 * (rank + 1));
+
   double t = 0.0;
   double w = 0.0;
 
+  int old_N = N;
+  N = N / numprocs + ((rank < N % numprocs) ? 1 : 0);
+
+  double start, stop, all_time;
+  start = MPI_Wtime();
   for (int i = 0; i < N; i++) {
     int out = do_walk(a, b, x, p, t);
     if (out == b)
       w += 1;
   }
+  stop = MPI_Wtime();
+  all_time = stop - start;
 
   double global_t, global_w;
+  double max_time;
+
   MPI_Reduce(&t, &global_t, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&w, &global_w, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&all_time, &max_time, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
-  if (MPI_COMM_RANK == 0) {
-    ofstream f("output.dat");
-    f << global_w / (N * MPI_COMM_SIZE) << " " << global_t / (N * MPI_COMM_SIZE)
-      << endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+  if (rank == 0) {
+    ofstream f("output.txt");
+    f << global_w / old_N << " " << global_t / old_N << endl;
     f.close();
+
+    ofstream s("stat.txt");
+    s << "Time = " << max_time << endl;
+    s << "Num of Processes = " << numprocs << endl;
+    s << "mpisbmit.pl -p " << numprocs << " main -- " << a << " " << b << " "
+      << x << " " << p << " " << old_N << endl;
+    s.close();
   }
+
+  MPI_Finalize();
 }
 
 int main(int argc, char** argv) {
@@ -53,14 +78,9 @@ int main(int argc, char** argv) {
   int b = atoi(argv[2]);
   int x = atoi(argv[3]);
   double p = atof(argv[4]);
-  int N = atoi(argv[5]) / MPI_COMM_SIZE;
-
-  int numprocs, rank;
-  MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int N = atoi(argv[5]);
 
   run_mc(a, b, x, p, N);
 
-  MPI_Finalize();
   return 0;
 }

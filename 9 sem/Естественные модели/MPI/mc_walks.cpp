@@ -35,7 +35,7 @@ void run_mc(int a, int b, int x, double p, int N) {
   }
 
   ofstream f("output.dat");
-  f << w / N << " " << t / N << endl;
+  f << w / (double)N << " " << t / (double)N << endl;
   f.close();
 }
 

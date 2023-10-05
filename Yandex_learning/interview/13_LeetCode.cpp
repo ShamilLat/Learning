@@ -5,6 +5,18 @@
 
 using namespace std;
 
+/*
+parentheses:
+n = 1
+()
+
+n = 2
+(()), ()()
+
+n = 3
+((())), (()()), (())(), ()(()), ()()()
+*/
+
 template <typename Type>
 ostream& operator<<(ostream& out, vector<Type> vec) {
   for (auto& i : vec) {

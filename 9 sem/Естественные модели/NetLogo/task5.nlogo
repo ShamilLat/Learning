@@ -19,8 +19,8 @@ globals
 
 to setup
   clear-all
-  reset-ticks
   setup-landscape
+  reset-ticks
   create-particles particles-number
   [
     setxy random-xcor random-ycor
@@ -41,28 +41,8 @@ to go
   [
     ifelse trace? [pen-down] [pen-up]
     facexy xcor + vx ycor + vy
-
-    if not (p-x = xcor and p-y = ycor) [
-      let h towardsxy p-x p-y
-      let d distancexy p-x p-y
-      let alpha random-float alpha-max
-      set vx vx + alpha * d * sin h
-      set vy vy + alpha * d * cos h
-    ]
-
-    if not (p-x = xcor and p-y = ycor) [
-      let h towardsxy g-x g-y
-      let d distancexy g-x g-y
-      let beta random-float beta-max
-      set vx gamma * vx + beta * d * sin h
-      set vy gamma * vy + beta * d * cos h
-    ]
-
-    set vx min list vx v-max
-    set vy min list vy v-max
-
     fd sqrt (vx ^ 2 + vy ^ 2)
-    if p-val > eval-target xcor ycor
+    if p-val > val
     [
       set p-val val
       set p-x xcor
@@ -75,6 +55,48 @@ to go
     set g-x p-x
     set g-y p-y
   ]
+  ask particles
+  [
+    let mates other particles in-radius vision
+    let new-g-x p-x
+    let new-g-y p-y
+    let new-g-val p-val
+
+    let mate-x 0
+    let mate-y 0
+    let mate-val 0
+    ask mates with-min [val]
+    [
+      set mate-x p-x
+      set mate-y p-y
+      set mate-val p-val
+    ]
+    if new-g-val > mate-val
+    [
+      set new-g-x mate-x
+      set new-g-y mate-y
+      set new-g-val mate-val
+    ]
+
+    if not (p-x = xcor and p-y = ycor) [
+      let h towardsxy p-x p-y
+      let d distancexy p-x p-y
+      let alpha random-float alpha-max
+      set vx gamma * vx + alpha * d * sin h
+      set vy gamma * vy + alpha * d * cos h
+    ]
+
+    if not (new-g-x = xcor and new-g-y = ycor) [
+      let h towardsxy new-g-x new-g-y
+      let d distancexy new-g-x new-g-y
+      let beta random-float beta-max
+      set vx gamma * vx + beta * d * sin h
+      set vy gamma * vy + beta * d * cos h
+    ]
+
+    set vx min list vx v-max
+    set vy min list vy v-max
+  ]
   tick
 end
 
@@ -82,6 +104,10 @@ to setup-landscape
   ask patches
   [
     set val eval-target pxcor pycor
+  ]
+  if target-function = "random"
+  [
+    repeat 50 [diffuse val 0.5]
   ]
   let minv min [val] of patches
   let maxv max [val] of patches
@@ -93,28 +119,41 @@ to setup-landscape
   ]
   create-turtles 1
   [
+    let new-x 0
+    let new-y 0
+    ask patches with-min [val]
+    [
+      set new-x pxcor
+      set new-y pycor
+    ]
+    setxy new-x new-y
     set shape "x"
     set size 8
-    set color green
+    set color orange
   ]
 end
 
 to-report eval-target [x y]
   set x x / 10
   set y y / 10
-  ifelse target-function = "sphere"
+  if target-function = "sphere"
   [report x * x + y * y]
+
+  if target-function = "rastrigin"
   [report x * x + y * y + 10 * (2 - cos (360 * x) - cos (360 * y))]
+
+  if target-function = "random"
+  [report random-float 1]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 378
 10
-982
-615
+869
+502
 -1
 -1
-2.97
+2.403
 1
 10
 1
@@ -128,8 +167,8 @@ GRAPHICS-WINDOW
 100
 -100
 100
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -141,7 +180,7 @@ CHOOSER
 55
 target-function
 target-function
-"sphere" "rastrigin"
+"sphere" "rastrigin" "random"
 1
 
 BUTTON
@@ -196,7 +235,7 @@ NIL
 SWITCH
 232
 150
-335
+365
 183
 trace?
 trace?
@@ -213,7 +252,7 @@ alpha-max
 alpha-max
 0
 0.1
-0.01
+0.03
 0.01
 1
 NIL
@@ -228,7 +267,7 @@ beta-max
 beta-max
 0
 0.1
-0.01
+0.03
 0.01
 1
 NIL
@@ -237,10 +276,10 @@ HORIZONTAL
 INPUTBOX
 232
 10
-337
+364
 70
 v-max
-2.0
+4.0
 1
 0
 Number
@@ -248,10 +287,10 @@ Number
 INPUTBOX
 232
 79
-336
+364
 139
 gamma
-0.999
+0.9999
 1
 0
 Number
@@ -259,8 +298,8 @@ Number
 PLOT
 8
 208
-337
-422
+368
+429
 target function
 NIL
 NIL
@@ -274,6 +313,17 @@ false
 PENS
 "best" 1.0 0 -13791810 true "" "plot min [p-val] of particles - min-val"
 "average" 1.0 0 -2674135 true "" "plot mean [p-val] of particles - min-val"
+
+INPUTBOX
+239
+441
+368
+501
+vision
+15.0
+1
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?

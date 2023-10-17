@@ -110,7 +110,7 @@ to go
       set g-y min-y
     ]
   ]
- ask particles [
+  ask particles [
     if not (p-x = xcor and p-y = ycor) [
       let h towardsxy p-x p-y
       let d distancexy p-x p-y
@@ -195,7 +195,7 @@ CHOOSER
 target-function
 target-function
 "sphere" "rastrigin" "random" "const"
-2
+0
 
 BUTTON
 634
@@ -685,7 +685,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

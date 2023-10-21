@@ -5,6 +5,21 @@
 
 using namespace std;
 
+/*
+Given a string s containing just the characters '(', ')', '{', '}', '[' and ']',
+determine if the input string is valid.
+
+Example:
+()
+true
+
+(){}[]
+true
+
+(]
+false
+*/
+
 class Solution {
  public:
   bool isValid(string s) {

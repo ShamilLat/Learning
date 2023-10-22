@@ -4,6 +4,10 @@
 
 using namespace std;
 
+/*
+Проверить, что дерево является деревом поиска
+*/
+
 struct TreeNode {
   int val;
   TreeNode* left;

@@ -6,6 +6,10 @@
 
 using namespace std;
 
+/*
+Найти наибольшую длинну подстроки без повторяющихся букв
+*/
+
 class Solution {
  public:
   int lengthOfLongestSubstring(string s) {

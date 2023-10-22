@@ -6,6 +6,10 @@
 
 using namespace std;
 
+/*
+Проверить, что дерево симметрично
+*/
+
 struct TreeNode {
   int val;
   TreeNode* left;

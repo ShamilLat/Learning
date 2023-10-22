@@ -21,8 +21,8 @@ struct TreeNode {
 class Solution {
  public:
   bool isValidBST(TreeNode* v,
-                  long long min_v = LONG_LONG_MIN,
-                  long long max_v = LONG_LONG_MAX) {
+                  long long min_v = LLONG_MIN,
+                  long long max_v = LLONG_MAX) {
     bool chk = true;
     if (v->left != nullptr) {
       chk &= isValidBST(v->left, min_v, min(max_v, (long long)v->val));
@@ -34,3 +34,5 @@ class Solution {
     return (v->val > min_v) & (v->val < max_v) & chk;
   }
 };
+
+int main() {}

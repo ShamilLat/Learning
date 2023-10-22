@@ -4,6 +4,10 @@
 
 using namespace std;
 
+/*
+Количество воды между блоками после дождя
+*/
+
 class Solution {
  public:
   int trap(vector<int>& height) {

@@ -1,151 +1,89 @@
-globals [
-  nest
-  food
-]
+globals [nest food]
 
 breed [ants ant]
+
 ants-own [
+  cnt-steps
   ph
-  state
 ]
 patches-own [
- p-type
- ph-n
- ph-f
+  p-ph
 ]
 
-to color-patch
-  ask patches [
-    let p (ph-n + ph-f) / 2
-    let c 255 * (1 - p)
-    set pcolor rgb c 255 c
-  ]
-  ask food [
-    set pcolor red
-  ]
-  ask nest [
-    set pcolor sky
-  ]
-end
 to setup
   clear-all
-  setup-patches
-  setup-ants
   reset-ticks
-end
 
-to setup-patches
-  ask patches [
-    set p-type "free"
-    set ph-n 0.01 + random-float 0.01
-    set ph-f 0.01 + random-float 0.01
-  ]
-  set nest patch 0 0
-  set food n-of food-sources patches with [distance nest > (max-pxcor * 0.8)]
-  ask nest [
-    set p-type "nest"
-  ]
-  ask food [
-    set p-type "food"
-    set pcolor red
-  ]
-  color-patch
-end
-
-to setup-ants
   create-ants ants-number [
-    setxy 0 0
+    set color black
+    set cnt-steps 0
+    set ph 0.1
+    set size 1
     set shape "bug"
-    set size 2
-    set state "forward"
+    setxy random-xcor random-ycor
   ]
+
+  ask patches [
+    set p-ph 0.01 + random-float 0.02
+    color-patch
+  ]
+end
+
+to color-patch
+  let c 255 * (1 - p-ph)
+  set pcolor rgb c 255 c
 end
 
 to go
   ask ants [
-    if p-type = "nest" or p-type = "food" [
-      set ph 0.1
-    ]
     rotate-ant
+    fd ant-vel
     put-pheromone
   ]
-  color-patch
-  diffuse ph-n 0.01
-  diffuse ph-f 0.01
+  diffuse p-ph 0.01
+
   ask patches [
-    set ph-n ph-n * 0.99
-    if ph-n < 0.001 [set ph-n 0]
-    set ph-f ph-f * 0.99
-    if ph-f < 0.001 [set ph-f 0]
+    set p-ph p-ph * 0.99
+    if p-ph < 0.001 [
+      set p-ph 0
+    ]
+    color-patch
   ]
   tick
 end
 
-to put-pheromone
-  if state = "forward" [
-    set ph-n ph-n + ph
-    if ph-n > 1 [set ph-n 1]
-  ]
-  if state = "backward" [
-    set ph-f ph-f + ph
-    if ph-f > 1 [set ph-f 1]
-  ]
-  set ph ph * 0.99
+to rotate-ant
+  let p patches in-cone vision angle with [distance myself > vision / 2]
+  set heading towards max-one-of p [p-ph]
 end
 
-to rotate-ant
-  ask ants [
-    if p-type = "nest" [
-      set state "forward"
-      set color red
-      rt 180
-      fd ant-velocity
-      stop
-    ]
-    if p-type = "food" [
-      set state "backward"
-      set color blue
-      rt 180
-      fd ant-velocity
-      stop
-    ]
-    if state = "forward" [
-      let f min-one-of food [distance myself]
-      if distance f < vision [
-        set heading towards f
-        fd min list distance f ant-velocity
-          stop
-      ]
-    ]
-    if state = "backward" [
-      if distance nest < vision [
-        set heading towards nest
-        fd min list ant-velocity distance nest
-        stop
-      ]
-    ]
-    let p patches in-cone vision angle with [distance myself > vision / 2]
-    if state = "forward" [
-      set heading towards max-one-of p [ph-f]
-      fd ant-velocity
-      stop
-    ]
-    if state = "backward" [
-      set heading towards max-one-of p [ph-n]
-      fd ant-velocity
-      stop
-    ]
+to put-pheromone
+  set p-ph p-ph + ph
+  if p-ph > 1 [
+    set p-ph 1
+  ]
+
+  if reduce-ph [
+    set ph ph * 0.99
+  ]
+  if ph < 0.001 [
+    set ph 0
+    set cnt-steps cnt-steps + 1
+  ]
+  if cnt-steps > 600 [
+    set ph 0.1
+    set cnt-steps 0
   ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-0
+9
 10
-739
-750
+522
+524
 -1
 -1
-7.24
+5.0
 1
 10
 1
@@ -163,12 +101,12 @@ GRAPHICS-WINDOW
 1
 1
 ticks
-60.0
+30.0
 
 BUTTON
-911
+534
 10
-981
+600
 43
 NIL
 setup
@@ -183,55 +121,40 @@ NIL
 1
 
 SLIDER
-739
-10
-911
-43
-food-sources
-food-sources
-1
-20
-9.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-739
-42
-911
-75
+532
+56
+704
+89
 ants-number
 ants-number
-1
+0
 1000
-128.0
-1
+1000.0
+5
 1
 NIL
 HORIZONTAL
 
 SLIDER
-739
-75
-911
-108
-ant-velocity
-ant-velocity
-0.1
-2
-2.0
-0.1
+531
+100
+703
+133
+ant-vel
+ant-vel
+1
+10
+1.0
+1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-912
-42
-981
-77
+616
+10
+679
+43
 NIL
 go
 T
@@ -245,25 +168,25 @@ NIL
 0
 
 SLIDER
-739
-108
-911
-141
+531
+143
+703
+176
 vision
 vision
 2
 10
-10.0
+5.0
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-739
-140
-911
-173
+531
+185
+703
+218
 angle
 angle
 90
@@ -273,6 +196,28 @@ angle
 1
 NIL
 HORIZONTAL
+
+SWITCH
+532
+231
+655
+264
+reduce-ph
+reduce-ph
+0
+1
+-1000
+
+MONITOR
+532
+279
+653
+324
+ph
+mean [ph] of ants
+4
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -381,6 +326,7 @@ Circle -16777216 true false 30 30 240
 circle 3
 true
 0
+Circle -16777216 true false 2 2 297
 Circle -7500403 true true 54 54 192
 
 cow

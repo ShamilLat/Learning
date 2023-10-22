@@ -62,9 +62,9 @@ to go
     let new-g-y p-y
     let new-g-val p-val
 
-    let mate-x 0
-    let mate-y 0
-    let mate-val 0
+    let mate-x p-x
+    let mate-y p-y
+    let mate-val p-val
     ask mates with-min [val]
     [
       set mate-x p-x
@@ -93,9 +93,13 @@ to go
       set vx gamma * vx + beta * d * sin h
       set vy gamma * vy + beta * d * cos h
     ]
+    if vx > v-max [
+      set vx v-max
+    ]
+    if vy > v-max [
+      set vy v-max
+    ]
 
-    set vx min list vx v-max
-    set vy min list vy v-max
   ]
   tick
 end
@@ -181,7 +185,7 @@ CHOOSER
 target-function
 target-function
 "sphere" "rastrigin" "random"
-1
+2
 
 BUTTON
 0
@@ -252,7 +256,7 @@ alpha-max
 alpha-max
 0
 0.1
-0.03
+0.01
 0.01
 1
 NIL
@@ -267,7 +271,7 @@ beta-max
 beta-max
 0
 0.1
-0.03
+0.01
 0.01
 1
 NIL
@@ -279,7 +283,7 @@ INPUTBOX
 364
 70
 v-max
-4.0
+5.0
 1
 0
 Number
@@ -320,7 +324,7 @@ INPUTBOX
 368
 501
 vision
-15.0
+100.0
 1
 0
 Number

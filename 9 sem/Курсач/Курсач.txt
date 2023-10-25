@@ -1,0 +1,28 @@
+git clone https://gitlab.srcc.msu.ru/sdenis1995/static_model.git
+
+install python 3.9
+
+Установка необходимых пакетов
+sudo yum groupinstall "Development Tools"
+sudo yum install openssl-devel bzip2-devel libffi-devel zlib-devel xz-devel
+
+Установка Python3.9
+cd /usr/src
+sudo wget https://www.python.org/ftp/python/3.9.10/Python-3.9.10.tgz
+sudo tar xzf Python-3.9.10.tgz
+
+Компиляция Python3.9
+cd Python-3.9.10
+sudo ./configure --enable-optimizations
+sudo make
+(Или:
+sudo make altinstall
+Это используется для предотвращения замены стандартной установленной версии Python системы)
+
+pip3 install gensim
+pip3 install scikit-learn
+pip3 install sqlalchemy
+pip3 install persistqueue
+pip3 install pymongo
+pip3 install requests
+

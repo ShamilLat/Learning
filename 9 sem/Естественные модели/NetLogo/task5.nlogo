@@ -49,12 +49,12 @@ to go
       set p-y ycor
     ]
   ]
-  ask min-one-of particles [p-val]
-  [
-    set g-val p-val
-    set g-x p-x
-    set g-y p-y
-  ]
+  ;ask min-one-of particles [p-val]
+  ;[
+  ;  set g-val p-val
+  ;  set g-x p-x
+  ;  set g-y p-y
+  ;]
   ask particles
   [
     let mates other particles in-radius vision
@@ -65,7 +65,7 @@ to go
     let mate-x p-x
     let mate-y p-y
     let mate-val p-val
-    ask mates with-min [val]
+    ask mates with-min [p-val]
     [
       set mate-x p-x
       set mate-y p-y
@@ -78,20 +78,22 @@ to go
       set new-g-val mate-val
     ]
 
+    set vx vx * gamma
+    set vy vy * gamma
     if not (p-x = xcor and p-y = ycor) [
       let h towardsxy p-x p-y
       let d distancexy p-x p-y
       let alpha random-float alpha-max
-      set vx gamma * vx + alpha * d * sin h
-      set vy gamma * vy + alpha * d * cos h
+      set vx vx + alpha * d * sin h
+      set vy vy + alpha * d * cos h
     ]
 
     if not (new-g-x = xcor and new-g-y = ycor) [
       let h towardsxy new-g-x new-g-y
       let d distancexy new-g-x new-g-y
       let beta random-float beta-max
-      set vx gamma * vx + beta * d * sin h
-      set vy gamma * vy + beta * d * cos h
+      set vx vx + beta * d * sin h
+      set vy vy + beta * d * cos h
     ]
     if vx > v-max [
       set vx v-max
@@ -141,10 +143,10 @@ to-report eval-target [x y]
   set x x / 10
   set y y / 10
   if target-function = "sphere"
-  [report x * x + y * y]
+  [report x ^ 2 + y ^ 2]
 
   if target-function = "rastrigin"
-  [report x * x + y * y + 10 * (2 - cos (360 * x) - cos (360 * y))]
+  [report x ^ 2 + y ^ 2 + 10 * (2 - cos (360 * x) - cos (360 * y))]
 
   if target-function = "random"
   [report random-float 1]
@@ -256,7 +258,7 @@ alpha-max
 alpha-max
 0
 0.1
-0.01
+0.03
 0.01
 1
 NIL
@@ -271,7 +273,7 @@ beta-max
 beta-max
 0
 0.1
-0.01
+0.03
 0.01
 1
 NIL
@@ -294,7 +296,7 @@ INPUTBOX
 364
 139
 gamma
-0.9999
+0.999
 1
 0
 Number
@@ -324,7 +326,7 @@ INPUTBOX
 368
 501
 vision
-100.0
+30.0
 1
 0
 Number

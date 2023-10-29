@@ -6,71 +6,164 @@
 
 using namespace std;
 
-// Ваши функции frand, eval, init, shuffle, select, crossover, mutate,
-// printthebest
+double frand()  // вещественное случайное число в диапазоне [0,1)
+{
+  return double(rand()) / RAND_MAX;
+}
 
-// Функция для миграции особей между субпопуляциями
-void migrate(int* P, int m, int n, int rank, int size) {
-  int migration_size = m / 5;  // Размер миграции, например, 20% от популяции
-  vector<int> migrants(migration_size * n);
+int eval(int* a, int n) {
+  int sum = 0;
+  for (int i = 0; i < n; i++)
+    sum += a[i];
+  return sum;
+}
 
-  // Выбираем особей для миграции
-  for (int i = 0; i < migration_size; ++i) {
-    for (int j = 0; j < n; ++j) {
-      migrants[i * n + j] = P[i * n + j];
-    }
-  }
+void init(int* P, int m, int n) {
+  for (int k = 0; k < m; k++)
+    for (int i = 0; i < n; i++)
+      P[k * n + i] = rand() % 2;
+}
 
-  // Определение рангов соседних процессов
-  int prev = rank - 1;
-  int next = rank + 1;
-  if (rank == 0)
-    prev = size - 1;
-  if (rank == size - 1)
-    next = 0;
-
-  // Отправляем и получаем мигрантов
-  MPI_Sendrecv_replace(migrants.data(), migration_size * n, MPI_INT, prev, 0,
-                       next, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-  // Заменяем часть текущей популяции мигрантами
-  for (int i = 0; i < migration_size; ++i) {
-    for (int j = 0; j < n; ++j) {
-      P[(m - migration_size + i) * n + j] = migrants[i * n + j];
-    }
+void shuffle(int* P, int m, int n) {
+  for (int k = 0; k < m; k++) {
+    int l = rand() % m;
+    for (int i = 0; i < n; i++)
+      swap(P[k * n + i], P[l * n + i]);
   }
 }
 
-void runGA(int n, int m, int T, int rank, int size) {
-  int* P = new int[n * m];
-  init(P, m, n);
-  for (int t = 0; t < T; t++) {
-    select(P, m, n);
-    crossover(P, m, n);
-    mutate(P, m, n);
-    if (t % 5 == 0) {  // Миграция каждые 5 поколений, например
-      migrate(P, m, n, rank, size);
-    }
-    if (rank == 0) {  // Печать лучшего решения (опционально)
-      printthebest(P, m, n);
+void select(int* P, int m, int n) {
+  double pwin = 0.75;
+  shuffle(P, m, n);
+  for (int k = 0; k < m / 2; k++) {
+    int a = 2 * k;
+    int b = 2 * k + 1;
+    int fa = eval(P + a * n, n);
+    int fb = eval(P + b * n, n);
+    double p = frand();
+    if (fa < fb && p < pwin || fa > fb && p > pwin)
+      for (int i = 0; i < n; i++)
+        P[b * n + i] = P[a * n + i];
+    else
+      for (int i = 0; i < n; i++)
+        P[a * n + i] = P[b * n + i];
+  }
+}
+
+void crossover(int* P, int m, int n) {
+  shuffle(P, m, n);
+  for (int k = 0; k < m / 2; k++) {
+    int a = 2 * k;
+    int b = 2 * k + 1;
+    int j = rand() % n;
+    for (int i = j; i < n; i++)
+      swap(P[a * n + i], P[b * n + i]);
+  }
+}
+
+void mutate(int* P, int m, int n) {
+  double pmut = 0.1;
+  for (int k = 0; k < m; k++)
+    for (int i = 0; i < n; i++)
+      if (frand() < pmut)
+        P[k * n + i] = 1 - P[k * n + i];
+}
+
+void printthebest(int* P, int m, int n) {
+  int k0 = -1;
+  int f0 = -1;
+  for (int k = 0; k < m; k++) {
+    int f = eval(P + k * n, n);
+    if (f > f0) {
+      f0 = f;
+      k0 = k;
     }
   }
-  delete[] P;
+  cout << f0 << ": ";
+  for (int i = 0; i < n; i++)
+    cout << P[k0 * n + i];
+  cout << endl;
+}
+
+void migrate(int* P, int n, int local_m, int world_rank, int world_size) {
+    int migration_size = 2; // Размер миграции, количество особей для обмена
+    int* to_send = new int[n * migration_size];
+    int* to_recv = new int[n * migration_size];
+
+    // Выбор особей для миграции (в этом примере просто берем первых в списке)
+    for (int i = 0; i < migration_size; ++i) {
+        for (int j = 0; j < n; ++j) {
+            to_send[i * n + j] = P[i * n + j];
+        }
+    }
+
+    int next_rank = (world_rank + 1) % world_size;
+    int prev_rank = (world_rank - 1 + world_size) % world_size;
+
+    // Отправка и получение особей
+    MPI_Sendrecv(to_send, n * migration_size, MPI_INT, next_rank, 0,
+                 to_recv, n * migration_size, MPI_INT, prev_rank, 0,
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    // Интеграция мигрировавших особей (заменяем последних в списке)
+    for (int i = 0; i < migration_size; ++i) {
+        for (int j = 0; j < n; ++j) {
+            P[(local_m - 1 - i) * n + j] = to_recv[i * n + j];
+        }
+    }
+
+    delete[] to_send;
+    delete[] to_recv;
+}
+
+void runGA(int n, int m, int T, int world_rank, int world_size) {
+    int local_m = m / world_size;  // Размер локальной субпопуляции
+    int* P = new int[n * local_m];
+    if (world_rank == 0) {
+        int* global_P = new int[n * m];
+        init(global_P, m, n);
+        MPI_Scatter(global_P, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0, MPI_COMM_WORLD);
+        delete[] global_P;
+    } else {
+        MPI_Scatter(0, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0, MPI_COMM_WORLD);
+    }
+    
+    for (int t = 0; t < T; t++) {
+        select(P, local_m, n);
+        crossover(P, local_m, n);
+        mutate(P, local_m, n);
+        if (t % 5 == 0) {  // Миграция каждые 5 итераций, к примеру
+            migrate(P, n, local_m, world_rank, world_size);
+        }
+        printthebest(P, local_m, n);
+    }
+
+    delete[] P;
 }
 
 int main(int argc, char** argv) {
-  MPI_Init(&argc, &argv);
+    MPI_Init(&argc, &argv);
 
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-  int n = 10;
-  int m = 20;
-  int T = 100;
+    int world_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-  runGA(n, m, T, rank, size);
+    int n = 10;
+    int m = 24;
+    int T = 10;
 
-  MPI_Finalize();
-  return 0;
+    if (m % world_size != 0) {
+        if (world_rank == 0) {
+            std::cerr << "Ошибка: общий размер популяции должен быть кратен количеству процессов MPI." << std::endl;
+        }
+        MPI_Finalize();
+        return 1;
+    }
+
+    runGA(n, m, T, world_rank, world_size);
+
+    MPI_Finalize();
+    return 0;
 }

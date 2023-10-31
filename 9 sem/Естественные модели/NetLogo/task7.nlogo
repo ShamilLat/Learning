@@ -1,16 +1,18 @@
 breed [nodes node]
 breed [ants ant]
 
-links-own [ph len visits best? cbest?]
-ants-own [current to-visit visited-links path-len]
+links-own [len ph visits best? cur-best?]
 
 globals [best-len sel rnd]
 
+ants-own [current to-visit visited-links path-len]
 
 to setup
   clear-all
-  ask patches [ set pcolor white ]
-  create-nodes graph-size [ setup-node ]
+  ask patches [
+    set pcolor white
+  ]
+  create-nodes graph-size [setup-node]
   ask nodes [
     create-links-with other nodes [
       set color blue
@@ -19,7 +21,7 @@ to setup
     ]
   ]
   create-ants ants-number [
-    set hidden? not hidden?
+    set hidden? true
   ]
   reset-ticks
 end
@@ -28,7 +30,48 @@ to setup-node
   set shape "circle"
   set size 1
   set color orange
-  if layout = "sun" [
+  if layout = "random" [
+    setxy random-xcor random-ycor
+  ]
+  if layout = "circle" [
+    let a 360 / graph-size * who
+    let r max-pxcor - 1
+    setxy (r * sin a) (r * cos a)
+  ]
+  if layout = "grid" [
+    let n ceiling sqrt graph-size
+    let d (2 * max-pxcor - 2) / (n - 1)
+    set xcor min-pxcor + 1 + d * (who mod n)
+    set ycor min-pycor + 1 + d * floor (who / n)
+  ]
+  if layout = "circle centre" [
+    ifelse who != 0
+    [
+      let a 360 / (graph-size - 1) * who
+      let r max-pxcor - 1
+      setxy (r * sin a) (r * cos a)
+    ]
+    [
+      setxy 0 0
+    ]
+  ]
+  if layout = "double circle" [
+    let a 0
+    let r 0
+    let r1 floor (graph-size / 2)
+    let r2 (floor (graph-size / 2) + graph-size mod 2)
+    ifelse who < r1
+    [
+      set a 360 / r1 * who
+      set r max-pxcor - 1
+    ]
+    [
+      set a 360 / r2 * (who - r1)
+      set r (max-pxcor - 1) / 2
+    ]
+    setxy (r * sin a) (r * cos a)
+  ]
+  if layout = "triple circle" [
     ifelse graph-size mod 3 = 0 [
       let a 1080 / graph-size * who
       let r 0
@@ -49,46 +92,7 @@ to setup-node
       set layout "random"
     ]
   ]
-  if layout = "random" [
-    setxy random-xcor random-ycor
-  ]
-  if layout = "circle" [
-      let a 360 / graph-size * who
-      let r max-pxcor - 1
-      setxy (r * sin a) (r * cos a)
-  ]
-  if layout = "grid" [
-      let n ceiling sqrt graph-size
-      let d (2 * max-pxcor - 2) / (n - 1)
-      set xcor min-pxcor + 1 + d * (who mod n)
-      set ycor min-pycor + 1 + d * floor (who / n)
-  ]
-  if layout = "circle centre" [
-    ifelse who != 0
-    [
-      let a 360 / graph-size * who
-      let r max-pxcor - 1
-      setxy (r * sin a) (r * cos a)
-    ]
-    [
-      setxy 0 0
-    ]
-  ]
-  if layout = "double circle" [
-    let a 0
-    let r 0
-    ifelse who < graph-size / 2
-    [
-      set a 720 / graph-size * who
-      set r max-pxcor - 1
-    ]
-    [
-      set a 730 / graph-size * who
-      set r (max-pxcor - 1) / 2
-    ]
-    setxy (r * sin a) (r * cos a)
-  ]
-  if layout = "spike" [
+  if layout = "star" [
     let a 360 / graph-size * who
     let r 0
     ifelse (who + 1) mod 2 != 0
@@ -100,13 +104,14 @@ to setup-node
     ]
     setxy (r * sin a) (r * cos a)
   ]
-  if layout = "mosaic" [
+
+  if layout = "graph" [
       let n ceiling sqrt graph-size
       let d (2 * max-pxcor - 2) / (n - 1)
       set xcor (min-pxcor + 1 + d * (who mod n))
       set ycor (min-pycor + 1 + d * floor (who / n))
-      if who mod 2 = 0 [
-        set ycor (min sentence (ycor + 3) (max-pycor - 1))
+      if (who mod n) mod 2 = 0 [
+        set ycor (min sentence (ycor + 4) (max-pycor - 1))
       ]
   ]
 end
@@ -121,19 +126,19 @@ to go
   ask links [
     set visits 0
   ]
-  repeat graph-size [
-    ask ants [ move-ant ]
-  ]
+
+  repeat graph-size [ask ants [move-ant]]
+
   ask ants [
     let dt Q / path-len / graph-size
-    ask visited-links [
-      set ph ph + dt
-    ]
+    ask visited-links [set ph ph + dt]
   ]
+
   check-best
+
   let max-ph (max [ph] of links)
   ask links [
-    set ph (ph / max-ph)
+    set ph ph / max-ph
     color-link
   ]
   tick
@@ -144,21 +149,11 @@ to move-ant
   set to-visit remove next to-visit
   let l link current next
   set visited-links (link-set l visited-links)
-  ask l [ set visits visits + 1 ]
+  ask l [
+    set visits visits + 1
+  ]
   set path-len path-len + [len] of l
   set current next
-end
-
-to-report get-weight [c]
-  let l link current c
-  report [(ph ^ alpha) / (len ^ beta)] of l
-end
-
-to select [c w]
-  if rnd < w and sel = 0 [
-    set sel c
-  ]
-  set rnd rnd - w
 end
 
 to-report choose-next
@@ -169,10 +164,20 @@ to-report choose-next
   report sel
 end
 
+to-report get-weight [c]
+  let l link current c
+  report [(ph ^ alpha) / (len ^ beta)] of l
+end
+
+to select [c w]
+  if rnd >= 0 and rnd < w [set sel c]
+  set rnd rnd - w
+end
+
 to check-best
   let best-ant min-one-of ants [path-len]
   let bp [path-len] of best-ant
-  if bp < best-len or (ticks = 0) [
+  if ticks = 0 or bp < best-len [
     set best-len bp
     ask links [
       set best? false
@@ -183,12 +188,10 @@ to check-best
       ]
     ]
   ]
-  ask links [
-    set cbest? false
-  ]
+  ask links [set cur-best? false]
   ask best-ant [
     ask visited-links [
-      set cbest? true
+      set cur-best? true
     ]
   ]
 end
@@ -196,32 +199,43 @@ end
 to color-link
   ifelse show-best?
   [
-    set thickness 0.25
+    set thickness 0.3
     set color green
     set hidden? not best?
-    if cbest? and show-cbest? [
+    if cur-best? and show-cur-best? and not best?[
       set thickness 0.15
-      set color red
+      set color green + 2
+      set hidden? false
+    ]
+    if cur-best? and show-cur-best? and best? [
+      set thickness 0.3
+      set color green - 3
       set hidden? false
     ]
   ]
   [
-    ask links [
-      set hidden? visits = 0 and ph < 0.1
-      set thickness 0.5 * visits / ants-number
-      set color scale-color blue ph 2 0
-    ]
+    set hidden? visits = 0 and ph < 0.1
+    set thickness 0.5 * visits / ants-number
+    set color scale-color blue ph 2 0
   ]
+end
+
+to add-size
+  set graph-size graph-size + 1
+end
+
+to reduce-size
+  set graph-size graph-size - 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-0
+258
 10
-532
-543
+695
+448
 -1
 -1
-15.9
+13.0
 1
 10
 1
@@ -242,10 +256,10 @@ ticks
 30.0
 
 SLIDER
-532
-10
-704
-43
+54
+63
+192
+96
 graph-size
 graph-size
 4
@@ -257,22 +271,56 @@ NIL
 HORIZONTAL
 
 CHOOSER
-532
-43
-704
-88
+154
+13
+246
+58
 layout
 layout
-"random" "circle" "grid" "circle centre" "double circle" "spike" "sun" "mosaic"
+"random" "circle" "grid" "circle centre" "double circle" "triple circle" "star" "graph"
 5
 
 BUTTON
-532
-154
-602
-187
+0
+13
+70
+58
 NIL
-setup
+setup\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+191
+63
+246
+96
++
+add-size
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+0
+63
+55
+96
+-
+reduce-size
 NIL
 1
 T
@@ -284,70 +332,25 @@ NIL
 1
 
 SLIDER
-532
-88
-704
-121
+0
+105
+246
+138
 ants-number
 ants-number
 1
 1000
-103.0
+100.0
 1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-704
-10
-905
-43
-alpha
-alpha
-0
-5
-1.0
-0.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-704
-43
-905
-76
-beta
-beta
-0
-5
-1.0
-0.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-704
-75
-905
-108
-Q
-Q
-0
-5
-1.0
-0.1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-602
-154
-665
-187
+76
+13
+148
+58
 NIL
 go
 T
@@ -360,11 +363,56 @@ NIL
 NIL
 0
 
+SLIDER
+0
+147
+246
+180
+alpha
+alpha
+0
+5
+1.0
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+188
+246
+221
+beta
+beta
+0
+5
+1.0
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+229
+246
+262
+Q
+Q
+0
+5
+1.0
+0.1
+1
+NIL
+HORIZONTAL
+
 SWITCH
-532
-121
-704
-154
+0
+270
+113
+303
 show-best?
 show-best?
 0
@@ -372,13 +420,13 @@ show-best?
 -1000
 
 SWITCH
-704
-121
-846
-154
-show-cbest?
-show-cbest?
-1
+111
+270
+247
+303
+show-cur-best?
+show-cur-best?
+0
 1
 -1000
 
@@ -724,7 +772,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

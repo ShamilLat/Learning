@@ -86,84 +86,138 @@ void printthebest(int* P, int m, int n) {
 }
 
 void migrate(int* P, int n, int local_m, int world_rank, int world_size) {
-    int migration_size = 2; // Размер миграции, количество особей для обмена
-    int* to_send = new int[n * migration_size];
-    int* to_recv = new int[n * migration_size];
+  int migration_size = 50;  // Размер миграции, количество особей для обмена
+  int* to_send = new int[n * migration_size];
+  int* to_recv = new int[n * migration_size];
 
-    // Выбор особей для миграции (в этом примере просто берем первых в списке)
-    for (int i = 0; i < migration_size; ++i) {
-        for (int j = 0; j < n; ++j) {
-            to_send[i * n + j] = P[i * n + j];
-        }
+  // Выбор особей для миграции (в этом примере просто берем первых в списке)
+  for (int i = 0; i < migration_size; ++i) {
+    for (int j = 0; j < n; ++j) {
+      to_send[i * n + j] = P[i * n + j];
     }
+  }
 
-    int next_rank = (world_rank + 1) % world_size;
-    int prev_rank = (world_rank - 1 + world_size) % world_size;
+  int next_rank = (world_rank + 1) % world_size;
+  int prev_rank = (world_rank - 1 + world_size) % world_size;
 
-    // Отправка и получение особей
-    MPI_Sendrecv(to_send, n * migration_size, MPI_INT, next_rank, 0,
-                 to_recv, n * migration_size, MPI_INT, prev_rank, 0,
-                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+  // Отправка и получение особей
+  MPI_Sendrecv(to_send, n * migration_size, MPI_INT, next_rank, 0, to_recv,
+               n * migration_size, MPI_INT, prev_rank, 0, MPI_COMM_WORLD,
+               MPI_STATUS_IGNORE);
 
-    // Интеграция мигрировавших особей (заменяем последних в списке)
-    for (int i = 0; i < migration_size; ++i) {
-        for (int j = 0; j < n; ++j) {
-            P[(local_m - 1 - i) * n + j] = to_recv[i * n + j];
-        }
+  // Интеграция мигрировавших особей (заменяем последних в списке)
+  for (int i = 0; i < migration_size; ++i) {
+    for (int j = 0; j < n; ++j) {
+      P[(local_m - 1 - i) * n + j] = to_recv[i * n + j];
     }
+  }
 
-    delete[] to_send;
-    delete[] to_recv;
+  delete[] to_send;
+  delete[] to_recv;
 }
 
+const double global_minimum_f0 = 0;
+
+// void runGA(int n, int m, int T, int world_rank, int world_size) {
+//   int local_m = m / world_size;  // Размер локальной субпопуляции
+//   int* P = new int[n * local_m];
+//   if (world_rank == 0) {
+//     int* global_P = new int[n * m];
+//     init(global_P, m, n);
+//     MPI_Scatter(global_P, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
+//                 MPI_COMM_WORLD);
+//     delete[] global_P;
+//   } else {
+//     MPI_Scatter(0, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
+//                 MPI_COMM_WORLD);
+//   }
+
+//   for (int t = 0; t < T; t++) {
+//     select(P, local_m, n);
+//     crossover(P, local_m, n);
+//     mutate(P, local_m, n);
+//     if (t % 5 == 0) {  // Миграция каждые 5 итераций, к примеру
+//       migrate(P, n, local_m, world_rank, world_size);
+//     }
+//     printthebest(P, local_m, n);
+//   }
+
+//   delete[] P;
+// }
+
 void runGA(int n, int m, int T, int world_rank, int world_size) {
-    int local_m = m / world_size;  // Размер локальной субпопуляции
-    int* P = new int[n * local_m];
-    if (world_rank == 0) {
-        int* global_P = new int[n * m];
-        init(global_P, m, n);
-        MPI_Scatter(global_P, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0, MPI_COMM_WORLD);
-        delete[] global_P;
-    } else {
-        MPI_Scatter(0, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0, MPI_COMM_WORLD);
+  int local_m = m / world_size;
+  int* P = new int[n * local_m];
+  if (world_rank == 0) {
+    int* global_P = new int[n * m];
+    init(global_P, m, n);
+    MPI_Scatter(global_P, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
+                MPI_COMM_WORLD);
+    delete[] global_P;
+  } else {
+    MPI_Scatter(NULL, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
+                MPI_COMM_WORLD);
+  }
+
+  double total_error;
+  double local_error;
+  // double global_minimum = 0;
+
+  for (int t = 0; t < T; t++) {
+    select(P, local_m, n);
+    crossover(P, local_m, n);
+    mutate(P, local_m, n);
+
+    local_error = 0;
+    for (int i = 0; i < local_m; ++i) {
+      local_error += abs(eval(&P[i * n], n) - global_minimum_f0);
     }
-    
-    for (int t = 0; t < T; t++) {
-        select(P, local_m, n);
-        crossover(P, local_m, n);
-        mutate(P, local_m, n);
-        if (t % 5 == 0) {  // Миграция каждые 5 итераций, к примеру
-            migrate(P, n, local_m, world_rank, world_size);
-        }
-        printthebest(P, local_m, n);
+    local_error /= local_m;
+
+    MPI_Reduce(&local_error, &total_error, 1, MPI_DOUBLE, MPI_SUM, 0,
+               MPI_COMM_WORLD);
+
+    if (world_rank == 0) {
+      total_error /= world_size;
+      std::cout << "Итерация " << t << ", Средняя погрешность: " << total_error
+                << std::endl;
     }
 
-    delete[] P;
+    if (t % 250 == 0) {  // Миграция каждые 5 итераций
+      migrate(P, n, local_m, world_rank, world_size);
+    }
+
+    printthebest(P, local_m, n);
+  }
+
+  delete[] P;
 }
 
 int main(int argc, char** argv) {
-    MPI_Init(&argc, &argv);
+  MPI_Init(&argc, &argv);
 
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+  int world_size;
+  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+  int world_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
-    int n = 10;
-    int m = 24;
-    int T = 10;
+  int n = 500;
+  int m = 500;
+  int T = 1000;
 
-    if (m % world_size != 0) {
-        if (world_rank == 0) {
-            std::cerr << "Ошибка: общий размер популяции должен быть кратен количеству процессов MPI." << std::endl;
-        }
-        MPI_Finalize();
-        return 1;
+  if (m % world_size != 0) {
+    if (world_rank == 0) {
+      std::cerr << "Ошибка: общий размер популяции должен быть кратен "
+                   "количеству процессов MPI."
+                << std::endl;
     }
-
-    runGA(n, m, T, world_rank, world_size);
-
     MPI_Finalize();
-    return 0;
+    return 1;
+  }
+
+  runGA(n, m, T, world_rank, world_size);
+
+  MPI_Finalize();
+  return 0;
 }

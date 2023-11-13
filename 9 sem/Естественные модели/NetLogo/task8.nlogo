@@ -1,241 +1,159 @@
-breed [nodes node]
-breed [ants ant]
+patches-own [free? p-val d-val]
 
-links-own [len ph visits best? cur-best?]
+globals [free-patches]
 
-globals [best-len sel rnd]
+breed [targets target]
+breed [bacterias bacteria]
 
-ants-own [current to-visit visited-links path-len]
+bacterias-own [val]
 
-to setup
+to setup-map
   clear-all
   ask patches [
-    set pcolor white
+    set free? true
   ]
-  create-nodes graph-size [setup-node]
-  ask nodes [
-    create-links-with other nodes [
-      set color blue
-      set ph 1
-      set len link-length / max-pxcor
+  if map-type = "blackhole" [
+    ask patches [
+      if abs (pxcor) <= 10 and abs (pycor) <= 10 [
+        set free? false
+      ]
     ]
   ]
-  create-ants ants-number [
-    set hidden? true
+  if map-type = "bricks" [
+    ask patches [
+      let n count neighbors with [not free?]
+      if n = 0 [set free? false]
+    ]
+  ]
+
+  set free-patches patches with [free?]
+  ask patches [
+    ifelse free? [set pcolor yellow] [set pcolor black]
   ]
   reset-ticks
 end
 
-to setup-node
-  set shape "circle"
-  set size 1
-  set color orange
-  if layout = "random" [
-    setxy random-xcor random-ycor
-  ]
-  if layout = "circle" [
-    let a 360 / graph-size * who
-    let r max-pxcor - 1
-    setxy (r * sin a) (r * cos a)
-  ]
-  if layout = "grid" [
-    let n ceiling sqrt graph-size
-    let d (2 * max-pxcor - 2) / (n - 1)
-    set xcor min-pxcor + 1 + d * (who mod n)
-    set ycor min-pycor + 1 + d * floor (who / n)
-  ]
-  if layout = "circle centre" [
-    ifelse who != 0
-    [
-      let a 360 / (graph-size - 1) * who
-      let r max-pxcor - 1
-      setxy (r * sin a) (r * cos a)
+to setup-target
+  clear-drawing
+  ask targets [die]
+  let target-patch one-of free-patches
+  ask target-patch [
+    sprout-targets 1 [
+      set color white
+      set shape "x"
+      set size 1.5
     ]
-    [
-      setxy 0 0
-    ]
-  ]
-  if layout = "double circle" [
-    let a 0
-    let r 0
-    let r1 floor (graph-size / 2)
-    let r2 (floor (graph-size / 2) + graph-size mod 2)
-    ifelse who < r1
-    [
-      set a 360 / r1 * who
-      set r max-pxcor - 1
-    ]
-    [
-      set a 360 / r2 * (who - r1)
-      set r (max-pxcor - 1) / 2
-    ]
-    setxy (r * sin a) (r * cos a)
-  ]
-  if layout = "triple circle" [
-    ifelse graph-size mod 3 = 0 [
-      let a 1080 / graph-size * who
-      let r 0
-      (ifelse
-        who < graph-size / 3 [
-          set r max-pxcor - 1
-        ]
-        who < 2 * graph-size / 3 [
-          set r max-pxcor - 4
-        ]
-        [
-          set r max-pxcor - 7
-        ]
-      )
-      setxy (r * sin a) (r * cos a)
-    ]
-    [
-      set layout "random"
-    ]
-  ]
-  if layout = "star" [
-    let a 360 / graph-size * who
-    let r 0
-    ifelse (who + 1) mod 2 != 0
-    [
-      set r max-pxcor - 4
-    ]
-    [
-      set r max-pxcor - 1
-    ]
-    setxy (r * sin a) (r * cos a)
   ]
 
-  if layout = "graph" [
-      let n ceiling sqrt graph-size
-      let d (2 * max-pxcor - 2) / (n - 1)
-      set xcor (min-pxcor + 1 + d * (who mod n))
-      set ycor (min-pycor + 1 + d * floor (who / n))
-      if (who mod n) mod 2 = 0 [
-        set ycor (min sentence (ycor + n / 2) (max-pycor - 1))
-      ]
+  ask free-patches [
+    set p-val 0
+  ]
+  let minv 0
+  let maxv 0
+
+  while [minv <= 1e-8] [
+    ask target-patch [
+      set p-val p-val + 0.1
+    ]
+    ask free-patches [
+      set d-val p-val / 20
+      let n count neighbors with [free?]
+      set p-val p-val - n * d-val
+    ]
+    ask patches [
+      set p-val p-val + sum [d-val] of neighbors with [free?]
+    ]
+    set minv min [p-val] of free-patches
+    set maxv max [p-val] of free-patches
+
+    ask free-patches [
+      set p-val (p-val - minv) / (maxv - minv)
+      set pcolor my-scale-color (p-val ^ 0.3)
+    ]
+  ]
+  display
+end
+
+to-report my-scale-color [x]
+  report rgb 255 (255 - x * 255) 0
+end
+
+to setup-colony
+  clear-drawing
+  ask bacterias [die]
+  ask one-of free-patches [
+    sprout-bacterias colony-size [
+      set size 0.8
+      set shape "circle"
+      set val eval-me
+    ]
+  ]
+  reset-ticks
+end
+
+to-report eval-me
+  if not swarm? [ report p-val ]
+  let a mean [h distance myself] of bacterias
+  report p-val + 0.0001 * a
+end
+
+to-report h[r]
+  let x r / d
+  if hr = "1" [
+    report 2 * exp(- x * x) - 3 * exp(-4 * x * x)
+  ]
+  if hr = "2" [
+    report 2 * exp (- x * x / 0.01) - exp(-(x - 0.1) * (x - 0.1) / 0.5)
+  ]
+  if hr = "3" [
+    report ln (x + 0.1) / 10
   ]
 end
 
 to go
-  ask ants [
-    set current 0
-    set to-visit (range 1 graph-size)
-    set visited-links no-links
-    set path-len 0
-  ]
-  ask links [
-    set visits 0
-  ]
-
-  repeat graph-size [ask ants [move-ant]]
-
-  ask ants [
-    let dt Q / path-len / graph-size
-    ask visited-links [set ph ph + dt]
-  ]
-
-  check-best
-
-  let max-ph (max [ph] of links)
-  ask links [
-    set ph ph / max-ph
-    color-link
+  if not way? [clear-drawing]
+  ask bacterias [
+    ifelse way? [pen-down] [pen-up]
+    move
+    if born? [born]
   ]
   tick
 end
 
-to move-ant
-  let next choose-next
-  set to-visit remove next to-visit
-  let l link current next
-  set visited-links (link-set l visited-links)
-  ask l [
-    set visits visits + 1
+to move
+  let p patch-ahead vel
+  ifelse p = nobody or [not free?] of p
+  [rt random 360 stop]
+  [fd vel]
+  let new-val eval-me
+  if new-val < val [rt random 360]
+  set val new-val
+end
+
+to born
+  let p random-float 1
+  if p < 0.98 [ stop ]
+  let rand-bacteria one-of bacterias
+  let challenger-val [val] of rand-bacteria
+  if val > challenger-val [
+    ask rand-bacteria [ die ]
+    hatch 1 []
+    stop
   ]
-  set path-len path-len + [len] of l
-  set current next
-end
-
-to-report choose-next
-  let weights map get-weight to-visit
-  set rnd random-float sum weights
-  set sel 0
-  (foreach to-visit weights select)
-  report sel
-end
-
-to-report get-weight [c]
-  let l link current c
-  report [(ph ^ alpha) / (len ^ beta)] of l
-end
-
-to select [c w]
-  if rnd >= 0 and rnd < w [set sel c]
-  set rnd rnd - w
-end
-
-to check-best
-  let best-ant min-one-of ants [path-len]
-  let bp [path-len] of best-ant
-  if ticks = 0 or bp < best-len [
-    set best-len bp
-    ask links [
-      set best? false
-    ]
-    ask best-ant [
-      ask visited-links [
-        set best? true
-      ]
-    ]
+  if val < challenger-val [
+    ask rand-bacteria [ hatch 1 [] ]
+    die
   ]
-  ask links [set cur-best? false]
-  ask best-ant [
-    ask visited-links [
-      set cur-best? true
-    ]
-  ]
-end
-
-to color-link
-  ifelse show-best?
-  [
-    set thickness 0.3
-    set color green
-    set hidden? not best?
-    if cur-best? and show-cur-best? and not best?[
-      set thickness 0.15
-      set color green + 2
-      set hidden? false
-    ]
-    if cur-best? and show-cur-best? and best? [
-      set thickness 0.3
-      set color green - 3
-      set hidden? false
-    ]
-  ]
-  [
-    set hidden? visits = 0 and ph < 0.1
-    set thickness 0.5 * visits / ants-number
-    set color scale-color blue ph 2 0
-  ]
-end
-
-to add-size
-  set graph-size graph-size + 1
-end
-
-to reduce-size
-  set graph-size graph-size - 1
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-258
+194
 10
-695
-448
+612
+429
 -1
 -1
-13.0
+10.0
 1
 10
 1
@@ -245,48 +163,33 @@ GRAPHICS-WINDOW
 0
 0
 1
--16
-16
--16
-16
+-20
+20
+-20
+20
 1
 1
 1
 ticks
 30.0
 
-SLIDER
-54
-63
-192
-96
-graph-size
-graph-size
-4
-100
-36.0
-1
-1
-NIL
-HORIZONTAL
-
 CHOOSER
-154
-13
-246
-58
-layout
-layout
-"random" "circle" "grid" "circle centre" "double circle" "triple circle" "star" "graph"
-7
+9
+95
+182
+140
+map-type
+map-type
+"free" "blackhole" "bricks"
+1
 
 BUTTON
-0
-13
-70
-58
+9
+10
+91
+43
 NIL
-setup\n
+setup-map
 NIL
 1
 T
@@ -298,29 +201,12 @@ NIL
 1
 
 BUTTON
-191
-63
-246
-96
-+
-add-size
+99
+10
+181
+43
 NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-0
-63
-55
-96
--
-reduce-size
+setup-target
 NIL
 1
 T
@@ -332,25 +218,42 @@ NIL
 1
 
 SLIDER
-0
-105
-246
-138
-ants-number
-ants-number
+9
+149
+183
+182
+colony-size
+colony-size
 1
-1000
-100.0
+100
+50.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-76
-13
-148
-58
+9
+52
+91
+85
+NIL
+setup-colony
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+99
+52
+181
+85
 NIL
 go
 T
@@ -364,69 +267,75 @@ NIL
 0
 
 SLIDER
-0
-147
-246
-180
-alpha
-alpha
-0
-5
-1.0
+9
+191
+184
+224
+vel
+vel
 0.1
 1
-NIL
-HORIZONTAL
-
-SLIDER
-0
-188
-246
-221
-beta
-beta
-0
-5
-1.0
 0.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-0
-229
-246
-262
-Q
-Q
-0
-5
-1.0
 0.1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-0
-270
-113
-303
-show-best?
-show-best?
-0
+7
+233
+97
+266
+way?
+way?
+1
 1
 -1000
 
 SWITCH
-111
-270
-247
-303
-show-cur-best?
-show-cur-best?
+96
+233
+186
+266
+swarm?
+swarm?
 0
+1
+-1000
+
+SLIDER
+7
+275
+186
+308
+d
+d
+1
+20
+5.0
+1
+1
+NIL
+HORIZONTAL
+
+CHOOSER
+7
+317
+99
+362
+hr
+hr
+"1" "2" "3"
+0
+
+SWITCH
+7
+370
+97
+403
+born?
+born?
+1
 1
 -1000
 

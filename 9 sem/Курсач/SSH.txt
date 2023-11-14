@@ -3,3 +3,5 @@ ssh -i C:\Users\Shoma\.ssh\id_rsa latypov@188.44.52.39 -p 20090
 ssh -i ~/.ssh/id_rsa latypovshamil2001@188.44.52.39 -p 20022
 
 mongosh "mongodb://student:OaLXOpLRdEd3kA@188.44.52.38:27017/main_db?authSource=main_db&readPreference=primary&ssl=false&directConnection=true"
+
+ssh -i ~/.ssh/id_rsa edu-cmc-sqi21-07@polus.hpc.cs.msu.ru

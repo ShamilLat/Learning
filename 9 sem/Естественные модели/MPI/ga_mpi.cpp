@@ -6,25 +6,70 @@
 
 using namespace std;
 
-double frand()  // вещественное случайное число в диапазоне [0,1)
-{
-  return double(rand()) / RAND_MAX;
+double frand() {
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  static std::uniform_real_distribution<> dis(0.0, 1.0);
+  return dis(gen);
 }
 
-int eval(int* a, int n) {
-  int sum = 0;
-  for (int i = 0; i < n; i++)
-    sum += a[i];
+double gen(const double start, const double end) {
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  std::uniform_real_distribution<> dis(start, end);
+  return dis(gen);
+}
+
+double sphere_function(double* x, int n) {
+  double sum = 0;
+  for (int i = 0; i < n; i++) {
+    sum += x[i] * x[i];
+  }
   return sum;
 }
 
-void init(int* P, int m, int n) {
-  for (int k = 0; k < m; k++)
-    for (int i = 0; i < n; i++)
-      P[k * n + i] = rand() % 2;
+// Функция Розенброка
+double rosenbrock_function(double* x, int n) {
+  double sum = 0;
+  for (int i = 0; i < n - 1; i++) {
+    sum += 100 * (x[i + 1] - x[i] * x[i]) * (x[i + 1] - x[i] * x[i]) +
+           (1 - x[i]) * (1 - x[i]);
+  }
+  return sum;
 }
 
-void shuffle(int* P, int m, int n) {
+// Функция Растригина
+double rastrigin_function(double* x, int n) {
+  double sum = 10 * n;
+  for (int i = 0; i < n; i++) {
+    sum += x[i] * x[i] - 10 * (cos(2 * M_PI * x[i]));
+  }
+  return sum;
+}
+
+double eval(double* a, int n, int function_id = 1) {
+  switch (function_id) {
+    case 0:
+      return sphere_function(a, n);
+    case 1:
+      return rosenbrock_function(a, n);
+    case 2:
+      return rastrigin_function(a, n);
+    default:
+      return sphere_function(a, n);
+  }
+  return 0;
+}
+
+void init(double* P, int m, int n) {
+  for (int k = 0; k < m; k++) {
+    for (int i = 0; i < n; i++) {
+      P[k * n + i] = gen(-100, 100);
+    }
+  }
+}
+
+void shuffle(double* P, int m, int n) {
   for (int k = 0; k < m; k++) {
     int l = rand() % m;
     for (int i = 0; i < n; i++)
@@ -32,16 +77,17 @@ void shuffle(int* P, int m, int n) {
   }
 }
 
-void select(int* P, int m, int n) {
-  double pwin = 0.75;
+void select(double* P, int m, int n) {
+  double pwin = 0.9;
   shuffle(P, m, n);
   for (int k = 0; k < m / 2; k++) {
     int a = 2 * k;
     int b = 2 * k + 1;
-    int fa = eval(P + a * n, n);
-    int fb = eval(P + b * n, n);
+    double fa = eval(P + a * n, n);
+    double fb = eval(P + b * n, n);
+
     double p = frand();
-    if (fa < fb && p < pwin || fa > fb && p > pwin)
+    if ((fa < fb && p < pwin) || (fa > fb && p > pwin))
       for (int i = 0; i < n; i++)
         P[b * n + i] = P[a * n + i];
     else
@@ -50,7 +96,7 @@ void select(int* P, int m, int n) {
   }
 }
 
-void crossover(int* P, int m, int n) {
+void crossover(double* P, int m, int n) {
   shuffle(P, m, n);
   for (int k = 0; k < m / 2; k++) {
     int a = 2 * k;
@@ -61,133 +107,107 @@ void crossover(int* P, int m, int n) {
   }
 }
 
-void mutate(int* P, int m, int n) {
-  double pmut = 0.1;
-  for (int k = 0; k < m; k++)
-    for (int i = 0; i < n; i++)
-      if (frand() < pmut)
-        P[k * n + i] = 1 - P[k * n + i];
+void mutate(double* P, int m, int n) {
+  double pmut = 0.05;
+  double mutation_strength = 5;
+  for (int k = 0; k < m; k++) {
+    for (int i = 0; i < n; i++) {
+      if (frand() < pmut) {
+        P[k * n + i] += (frand() * 2.0 * mutation_strength) - mutation_strength;
+        // Ограничить значения в диапазоне [-100, 100]
+        P[k * n + i] = std::max(-100.0, std::min(100.0, P[k * n + i]));
+      }
+    }
+  }
 }
 
-void printthebest(int* P, int m, int n) {
+double printthebest(double* P, int m, int n) {
   int k0 = -1;
-  int f0 = -1;
+  double f0 = 1e12;
   for (int k = 0; k < m; k++) {
-    int f = eval(P + k * n, n);
-    if (f > f0) {
+    double f = eval(P + k * n, n);
+    if (f < f0) {
       f0 = f;
       k0 = k;
     }
   }
-  cout << f0 << ": ";
-  for (int i = 0; i < n; i++)
-    cout << P[k0 * n + i];
-  cout << endl;
+  // cout << f0 << ": ";
+  // for (int i = 0; i < n; i++)
+  //   cout << P[k0 * n + i];
+  // cout << endl;
+  return f0;
 }
 
-void migrate(int* P, int n, int local_m, int world_rank, int world_size) {
-  int migration_size = 50;  // Размер миграции, количество особей для обмена
-  int* to_send = new int[n * migration_size];
-  int* to_recv = new int[n * migration_size];
+void migrate(double* P, int m, int n, int world_rank, int world_size) {
+  MPI_Status status;
 
-  // Выбор особей для миграции (в этом примере просто берем первых в списке)
-  for (int i = 0; i < migration_size; ++i) {
-    for (int j = 0; j < n; ++j) {
-      to_send[i * n + j] = P[i * n + j];
-    }
+  int next = (world_rank + 1) % world_size;
+  int prev = (world_rank - 1 + world_size) % world_size;
+
+  // Определение размера миграции
+  int migration_size = m / 20;
+
+  double* individuals_to_send = new double[migration_size * n];
+  double* individuals_to_recv = new double[migration_size * n];
+
+  for (int i = 0; i < migration_size * n; ++i) {
+    individuals_to_send[i] = P[i];
   }
 
-  int next_rank = (world_rank + 1) % world_size;
-  int prev_rank = (world_rank - 1 + world_size) % world_size;
+  MPI_Sendrecv(individuals_to_send, migration_size * n, MPI_DOUBLE, next, 0,
+               individuals_to_recv, migration_size * n, MPI_DOUBLE, prev, 0,
+               MPI_COMM_WORLD, &status);
+  MPI_Barrier(MPI_COMM_WORLD);
 
-  // Отправка и получение особей
-  MPI_Sendrecv(to_send, n * migration_size, MPI_INT, next_rank, 0, to_recv,
-               n * migration_size, MPI_INT, prev_rank, 0, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
-
-  // Интеграция мигрировавших особей (заменяем последних в списке)
-  for (int i = 0; i < migration_size; ++i) {
-    for (int j = 0; j < n; ++j) {
-      P[(local_m - 1 - i) * n + j] = to_recv[i * n + j];
-    }
+  for (int i = 0; i < migration_size * n; ++i) {
+    P[i] = individuals_to_recv[i];
   }
 
-  delete[] to_send;
-  delete[] to_recv;
+  delete[] individuals_to_send;
+  delete[] individuals_to_recv;
 }
-
-const double global_minimum_f0 = 0;
-
-// void runGA(int n, int m, int T, int world_rank, int world_size) {
-//   int local_m = m / world_size;  // Размер локальной субпопуляции
-//   int* P = new int[n * local_m];
-//   if (world_rank == 0) {
-//     int* global_P = new int[n * m];
-//     init(global_P, m, n);
-//     MPI_Scatter(global_P, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
-//                 MPI_COMM_WORLD);
-//     delete[] global_P;
-//   } else {
-//     MPI_Scatter(0, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
-//                 MPI_COMM_WORLD);
-//   }
-
-//   for (int t = 0; t < T; t++) {
-//     select(P, local_m, n);
-//     crossover(P, local_m, n);
-//     mutate(P, local_m, n);
-//     if (t % 5 == 0) {  // Миграция каждые 5 итераций, к примеру
-//       migrate(P, n, local_m, world_rank, world_size);
-//     }
-//     printthebest(P, local_m, n);
-//   }
-
-//   delete[] P;
-// }
 
 void runGA(int n, int m, int T, int world_rank, int world_size) {
   int local_m = m / world_size;
-  int* P = new int[n * local_m];
+  double* P = new double[n * local_m];
+  double* global_P = nullptr;
+
   if (world_rank == 0) {
-    int* global_P = new int[n * m];
+    global_P = new double[n * m];
     init(global_P, m, n);
-    MPI_Scatter(global_P, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
-                MPI_COMM_WORLD);
-    delete[] global_P;
-  } else {
-    MPI_Scatter(NULL, n * local_m, MPI_INT, P, n * local_m, MPI_INT, 0,
-                MPI_COMM_WORLD);
   }
 
-  double total_error;
-  double local_error;
-  // double global_minimum = 0;
+  MPI_Scatter(global_P, n * local_m, MPI_DOUBLE, P, n * local_m, MPI_DOUBLE, 0,
+              MPI_COMM_WORLD);
+
+  if (world_rank == 0) {
+    delete[] global_P;
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  double best = 0.;
+  double sum = 0.;
+  double totalsum = 0.;
+  double totalbest = 0.;
 
   for (int t = 0; t < T; t++) {
     select(P, local_m, n);
     crossover(P, local_m, n);
     mutate(P, local_m, n);
 
-    local_error = 0;
-    for (int i = 0; i < local_m; ++i) {
-      local_error += abs(eval(&P[i * n], n) - global_minimum_f0);
-    }
-    local_error /= local_m;
-
-    MPI_Reduce(&local_error, &total_error, 1, MPI_DOUBLE, MPI_SUM, 0,
-               MPI_COMM_WORLD);
-
+    best = printthebest(P, local_m, n);
+    sum = best;
+    MPI_Allreduce(&sum, &totalsum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&best, &totalbest, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     if (world_rank == 0) {
-      total_error /= world_size;
-      std::cout << "Итерация " << t << ", Средняя погрешность: " << total_error
-                << std::endl;
+      cout << t << " " << totalbest << " " << totalsum / world_size << endl;
     }
 
-    if (t % 250 == 0) {  // Миграция каждые 5 итераций
-      migrate(P, n, local_m, world_rank, world_size);
+    if (t % 20 == 0) {  // Миграция каждые 20 итераций
+      migrate(P, local_m, n, world_rank, world_size);
+      MPI_Barrier(MPI_COMM_WORLD);
     }
-
-    printthebest(P, local_m, n);
   }
 
   delete[] P;
@@ -203,8 +223,8 @@ int main(int argc, char** argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
   int n = 500;
-  int m = 500;
-  int T = 1000;
+  int m = 400;
+  int T = 5000;
 
   if (m % world_size != 0) {
     if (world_rank == 0) {

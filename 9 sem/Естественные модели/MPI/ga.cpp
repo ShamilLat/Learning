@@ -16,9 +16,11 @@ int eval(int* a, int n) {
 }
 
 void init(int* P, int m, int n) {
-  for (int k = 0; k < m; k++)
-    for (int i = 0; i < n; i++)
-      P[k * n + i] = rand() % 2;
+  for (int k = 0; k < m; k++) {
+    for (int i = 0; i < n; i++) {
+      P[k * n + i] = rand() % 201 - 100;  // значения от -100 до 100
+    }
+  }
 }
 
 void shuffle(int* P, int m, int n) {
@@ -96,9 +98,9 @@ void runGA(int n, int m, int T) {
 }
 
 int main(int argc, char** argv) {
-  int n = 10;  // atoi(argv[1]);
-  int m = 20;  // atoi(argv[2]);
-  int T = 10;  // atoi(argv[3]);
+  int n = 500;  // atoi(argv[1]);
+  int m = 400;  // atoi(argv[2]);
+  int T = 1000;  // atoi(argv[3]);
 
   runGA(n, m, T);
   getchar();

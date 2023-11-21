@@ -2,6 +2,7 @@
 #include <cstring>
 #include <iostream>
 #include <random>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -17,21 +18,21 @@ void comparator(vector<int>& vec, int a, int b) {
   }
 }
 
-int S(int first1, int first2, int step, int n, int m) {
+void S(int first1, int first2, int step, int n, int m) {
   if (n * m < 1) {
-    return 0;
+    return;
   }
 
   if (n == 1 && m == 1) {
     add_comp(first1, first2);
-    return 1;
+    return;
   }
 
-  int n1, m1, i, ret = 0;
+  int n1, m1, i;
   n1 = n - n / 2;
   m1 = m - m / 2;
-  ret = max(ret, S(first1, first2, 2 * step, n1, m1));
-  ret = max(ret, S(first1 + step, first2 + step, 2 * step, n - n1, m - m1));
+  S(first1, first2, 2 * step, n1, m1);
+  S(first1 + step, first2 + step, 2 * step, n - n1, m - m1);
 
   for (i = 1; i < n - 1; i += 2) {
     add_comp(first1 + step * i, first1 + step * (i + 1));
@@ -47,27 +48,21 @@ int S(int first1, int first2, int step, int n, int m) {
   for (; i < m - 1; i += 2) {
     add_comp(first2 + step * i, first2 + step * (i + 1));
   }
-
-  return ret + 1;
 }
 
-int B(int first, int step, int count) {
+void B(int first, int step, int count) {
   if (count < 2) {
-    return 0;
+    return;
   }
   if (count == 2) {
     add_comp(first, first + step);
-    return 1;
+    return;
   }
   int count1 = count / 2 + count % 2;
 
-  int ret = 0;
-  ret = max(ret, B(first, step, count1));
-  ret = max(ret, B(first + step * count1, step, count - count1));
-
-  ret += S(first, first + step * count1, step, count1, count - count1);
-
-  return ret;
+  B(first, step, count1);
+  B(first + step * count1, step, count - count1);
+  S(first, first + step * count1, step, count1, count - count1);
 }
 
 int main(int argc, char* argv[]) {
@@ -82,7 +77,31 @@ int main(int argc, char* argv[]) {
 
   cout << n << " 0 0\n";
 
-  int tact_count = B(0, 1, n);
+  B(0, 1, n);
+
+  vector<unordered_set<int>> tacts;
+  for (auto& i : comps) {
+    int set = -1;
+    for (set = tacts.size() - 1; set >= 0; set--) {
+      if (tacts[set].contains(i.first) || tacts[set].contains(i.second)) {
+        if (set == tacts.size() - 1) {
+          tacts.push_back(unordered_set<int>());
+        }
+        tacts[set + 1].insert(i.first);
+        tacts[set + 1].insert(i.second);
+        break;
+      }
+    }
+    if (set == -1) {
+      if (tacts.size() == 0) {
+        tacts.push_back(unordered_set<int>());
+      }
+      tacts[0].insert(i.first);
+      tacts[0].insert(i.second);
+    }
+  }
+
+  int tact_count = tacts.size();
 
   int c_size = comps.size();
   for (auto& comp : comps) {

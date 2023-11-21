@@ -5,6 +5,10 @@
 
 using namespace std;
 
+/*
+Найти самый длинный палиндром в строке
+*/
+
 class Solution {
  public:
   string longestPalindrome(string s) {

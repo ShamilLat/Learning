@@ -5,6 +5,16 @@
 
 using namespace std;
 
+/*
+Подается бинарный массив из 0 и 1 и число k.
+Вывести максимальное количество единиц подряд, если мы можем
+заменить k нулей
+
+Given a binary array nums and an integer k,
+return the maximum number of consecutive 1's in the array
+if you can flip at most k 0's.
+*/
+
 class Solution {
  public:
   int longestOnes(vector<int>& nums, int k) {
@@ -53,7 +63,7 @@ int main() {
   //   vec = {0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1};
   vec = {1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0};
 
-  Solution solv; 
+  Solution solv;
   Solution2 solv2;
 
   cout << solv.longestOnes(vec, 1) << endl;

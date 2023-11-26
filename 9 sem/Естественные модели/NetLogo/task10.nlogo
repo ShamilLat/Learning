@@ -1,37 +1,27 @@
-globals [
-  n
-  start
-  target
-  elite
-]
-
-turtles-own [
-  x
-  f
-]
-
+globals [n start target block]
+turtles-own [x f]
 
 to setup
   clear-all
   setup-layout
   let d [distance target] of start
-  set n floor (1.3 * d)
+  set n floor (1.5 * d)
   create-population
   reset-ticks
 end
 
-
 to setup-layout
-  ask patches [ set pcolor white ]
+  ask patches [set pcolor white]
+
   if layout = "random" [
-    ask n-of n-random patches [ set pcolor gray ]
+    ask n-of 100 patches [ set pcolor gray ]
   ]
   if layout = "hole" [
     let middle patches with [ pycor = 0 ]
     ask middle [ set pcolor gray ]
     ask one-of middle [ set pcolor white ]
   ]
-  if layout = "double-hole" [
+  if layout = "two holes" [
     let bar-r patches with [ pycor = round (max-pycor / 3) ]
     ask bar-r [set pcolor gray ]
     ask one-of bar-r [ set pcolor white ]
@@ -40,16 +30,16 @@ to setup-layout
     ask one-of bar-l [ set pcolor white ]
   ]
   if layout = "bar" [
-    let bar-middle patches with [ pycor = 0 and pxcor >= (- bar-len / 2) and pxcor < bar-len / 2 ]
+    let bar-middle patches with [ pycor = 0 and pxcor >= (- 10 / 2) and pxcor < 10 / 2 ]
     ask bar-middle [ set pcolor gray ]
   ]
-  if layout = "double-bar" [
-    let bar-r patches with [ pycor = round (max-pycor / 3) and pxcor >= (- bar-len) ]
+  if layout = "zigzag" [
+    let bar-r patches with [ pycor = round (max-pycor / 3) and pxcor >= (-5) ]
     ask bar-r [set pcolor gray ]
-    let bar-l patches with [ pycor = round (min-pycor / 3) and pxcor < bar-len ]
+    let bar-l patches with [ pycor = round (min-pycor / 3) and pxcor < 5 ]
     ask bar-l [set pcolor gray ]
   ]
-  if layout = "two-path" [
+  if layout = "double bridge" [
     ask patches [ set pcolor gray ]
     ask patches with [abs pxcor < 10 and abs pycor < 10] [ set pcolor white ]
     ask patches with [abs pxcor < 3] [ set pcolor white ]
@@ -61,112 +51,97 @@ to setup-layout
   ask target [ set pcolor red ]
 end
 
-
 to create-population
   create-turtles pop-size [
     set shape "circle"
     set size 0.8
     set x (list random 360)
-    repeat (n - 1) [ set x lput (90 - random 180) x ]
+    repeat (n - 1) [
+      set x lput (90 - random 180) x
+    ]
     eval 1
   ]
 end
 
-
 to eval [w]
   move-to start
   set heading 0
-  if w > 0 [pd set pen-size w]
+  if w > 0 [
+    pd
+    set pen-size w]
   let k 0
   let stop? false
   while [k < n and not stop?] [
     rt item k x
     let p-a patch-ahead 1
     ifelse p-a = nobody or [pcolor] of p-a = gray
-    [set stop? true] [fd 1]
+    [set stop? true]
+    [fd 1]
     set k k + 1
   ]
   pu
   set f distance target
 end
 
-
 to go
   clear-drawing
-  set elite min-one-of turtles [f]
-  ask turtles [ set hidden? hide-turtles? ]
-  ask turtles [ select ]
-  ask turtles [
-    if self != elite [ crossover ]
+  set block min-one-of turtles [f]
+  ask turtles [set hidden? hide-turtles?]
+  ask turtles [select]
+  ask block [
+    ask other turtles [crossover]
+    ask other turtles [mutate]
   ]
-  ask turtles [
-    if self != elite [ mutate ]
-  ]
-  ifelse not show-best?
+  ;ask turtles [crossover]
+  ;ask turtles [mutate]
+  ifelse show-best?
   [
-    ask turtles [ eval 1 ]
-  ]
-  [
-    ask turtles [ eval -1 ]
+    ask turtles [eval -1]
     ask min-one-of turtles [f] [eval 2]
   ]
-  ;if [ any? turtles-here ] of target [ stop ]
+  [ask turtles [eval 1]]
+  if [any? turtles-here] of target [stop]
   tick
 end
 
-
-to select-myself [o-t]
-  ask o-t [
+to select
+  if random-float 1 > 0.25 [stop]
+  let o-t one-of other turtles
+  if random-float 1 < 0.1 [
+    set o-t min-one-of turtles [f]
+  ]
+  let better? f < [f] of o-t
+  ifelse better? xor (random-float 1 > 0.9) [
+    ask o-t [
       set x [x] of myself
       set f [f] of myself
+    ]
+  ]
+  [
+    set x [x] of o-t
+    set f [f] of o-t
   ]
 end
-
-
-to select-opponent [o-t]
-  set x [x] of o-t
-  set f [f] of o-t
-end
-
-
-to select
-  if random-float 1 > 0.25 [ stop ]
-  let o-t one-of other turtles
-  let better? f < [f] of o-t
-  if [f] of o-t = [f] of elite [
-    select-opponent o-t
-    stop
-  ]
-  if [f] of self = [f] of elite [
-    select-myself o-t
-    stop
-  ]
-  ifelse better? xor (random-float 1 > 0.9) or o-t = elite
-  [ select-myself o-t ] [ select-opponent o-t ]
-end
-
 
 to crossover
-  if random-float 1 < 0.5 [ stop ]
+  if random-float 1 < 0.5 [stop]
   let o-t one-of other turtles
+  if random-float 1 < 0.1 [
+    set o-t min-one-of turtles [f]
+  ]
   let t (list)
   let i 0
   repeat n [
     ifelse random-float 1 < 0.8
-    [
-      set t lput (item i x) t
-    ]
-    [
-      set t lput (item i [x] of o-t) t
-    ]
+    [set t lput (item i x) t]
+    [set t lput (item i [x] of o-t) t]
     set i i + 1
   ]
   set x t
 end
 
-
 to mutate
-  if random-float 1 > 0.2 [ stop ]
+  if random-float 1 < 0.2 [stop]
   let t (list)
   let i 0
   repeat n [
@@ -177,13 +152,13 @@ to mutate
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-0
+157
 10
-624
-635
+594
+448
 -1
 -1
-18.67
+13.0
 1
 10
 1
@@ -204,9 +179,9 @@ ticks
 30.0
 
 BUTTON
-623
+9
 10
-693
+72
 43
 NIL
 setup
@@ -221,57 +196,35 @@ NIL
 1
 
 CHOOSER
-693
-10
-831
-55
+9
+47
+147
+92
 layout
 layout
-"empty" "bar" "double-bar" "random" "hole" "double-hole" "two-path"
-0
-
-INPUTBOX
-831
-10
-969
-70
-n-random
-100.0
-1
-0
-Number
-
-INPUTBOX
-832
-70
-969
-130
-bar-len
-5.0
-1
-0
-Number
+"empty" "random" "bar" "zigzag" "hole" "two holes" "double bridge"
+3
 
 SLIDER
-693
-55
-832
-88
+9
+96
+148
+129
 pop-size
 pop-size
+0
+500
+500.0
 1
-201
-201.0
-2
 1
 NIL
 HORIZONTAL
 
 BUTTON
-624
+83
+10
+146
 43
-693
-76
 NIL
 go
 T
@@ -285,10 +238,10 @@ NIL
 0
 
 SWITCH
-693
-88
-832
-121
+9
+133
+148
+166
 hide-turtles?
 hide-turtles?
 1
@@ -296,10 +249,10 @@ hide-turtles?
 -1000
 
 SWITCH
-693
-121
-832
-154
+9
+170
+148
+203
 show-best?
 show-best?
 1
@@ -307,13 +260,13 @@ show-best?
 -1000
 
 MONITOR
-969
-10
-1078
-55
-Best distance
+9
+210
+148
+255
+min-f
 min [f] of turtles
-5
+17
 1
 11
 

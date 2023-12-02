@@ -1,4 +1,5 @@
 Annotation of "Enhancing Performance Monitoring in C/C++ Programs with EDPM: A Domain-Specific Language for Performance Monitoring"
+https://arxiv.org/pdf/2311.03535.pdf
 
 Authors: David Weisskopf Holmqvist and Suejb Memeti
 

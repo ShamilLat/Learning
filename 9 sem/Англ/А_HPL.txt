@@ -1,4 +1,5 @@
 Annotation of "HPL-ViT: A Unified Perception Framework for Heterogeneous Parallel LiDARs in V2V"
+https://arxiv.org/pdf/2309.15572.pdf
 
 Authors: Yuhang Liu, Boyi Sun, Yuke Li, Yuzheng Hu, Fei-Yue Wang
 

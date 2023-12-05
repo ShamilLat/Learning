@@ -10,18 +10,3 @@ The article introduces EDPM, an embedded domain-specific language for performanc
 Key benefits of EDPM discussed in the paper include a reduction in the required lines of code and simplification of configuring performance monitoring regions. The authors compare EDPM with the well-known tool PAPI in terms of required lines of code, flexibility in configuring regions, and performance overhead. The study's findings demonstrate that EDPM is a low-resolution profiling tool that offers a reduction in required lines of code and enables programmers to express various configurations of regions.
 
 Overall, EDPM presents a promising solution for simplifying and optimizing performance monitoring in C and C++ programs.
-
-
-
-
-Аннотация статьи "Enhancing Performance Monitoring in C/C++ Programs with EDPM: A Domain-Specific Language for Performance Monitoring"
-
-Авторы: David Weisskopf Holmqvist и Suejb Memeti
-
-Дата публикации: 6 ноября 2023 года
-
-В статье представлен EDPM, встроенный доменно-специфический язык для мониторинга производительности C и C++ программ. EDPM был разработан для упрощения процесса встраивания и управления мониторингом производительности в программах. Цель EDPM - предоставить программистам более высокий уровень абстракции для аннотации участков кода, требующих инструментирования, тем самым сокращая программные усилия.
-
-В статье рассматриваются основные преимущества EDPM, включая уменьшение количества необходимых строк кода и упрощение конфигурации регионов мониторинга производительности. Авторы сравнивают EDPM с известным инструментом PAPI по таким критериям, как необходимое количество строк кода, гибкость в конфигурировании регионов и накладные расходы на производительность. Результаты исследования показывают, что EDPM является инструментом низкоразрешающего профилирования, который предлагает уменьшение количества необходимых строк кода и позволяет программистам выражать различные конфигурации регионов.
-
-В целом, EDPM представляет собой обещающее решение для упрощения и оптимизации мониторинга производительности в программах на C и C++.

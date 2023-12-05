@@ -3,14 +3,21 @@
 #include <unordered_set>
 #include <vector>
 
+using namespace std;
+
+/*
+Даны точки на прямой. Есть ли вертикальная прямая, которая делит эти точки
+симместрично
+*/
+
 bool f(const std::vector<int>& vec) {
-  int min = 0x7fffffff;
-  int max = 0x80000000;
-  std::unordered_set<int> points;
+  int min = INT_MAX;
+  int max = INT_MIN;
+  unordered_set<int> points;
 
   for (int i = 0; i < vec.size(); i++) {
-    min = std::min(vec[i], min);
-    max = std::max(vec[i], max);
+    min = min(vec[i], min);
+    max = max(vec[i], max);
 
     points.insert(vec[i]);
   }
@@ -27,11 +34,11 @@ bool f(const std::vector<int>& vec) {
 
 int main() {
   int n;
-  std::cin >> n;
-  std::vector<int> vec(n);
+  cin >> n;
+  vector<int> vec(n);
   for (int i = 0; i < n; i++) {
-    std::cin >> vec[i];
+    cin >> vec[i];
   }
 
-  std::cout << n << " " << f(vec) << std::endl;
+  cout << n << " " << f(vec) << endl;
 }

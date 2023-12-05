@@ -203,7 +203,7 @@ CHOOSER
 layout
 layout
 "empty" "random" "bar" "zigzag" "hole" "two holes" "double bridge"
-3
+2
 
 SLIDER
 9
@@ -214,7 +214,7 @@ pop-size
 pop-size
 0
 500
-500.0
+194.0
 1
 1
 NIL

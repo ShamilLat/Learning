@@ -1,50 +1,64 @@
 #include <iostream>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;
 
-int calculateSimilarity(const vector<int>& arr1,
-                        const vector<int>& arr2,
-                        int i = 0) {
-  int minLength = min(arr1.size(), arr2.size());
-  while (i < minLength && arr1[i] == arr2[i]) {
-    i++;
-  }
+class Tree {
+ public:
+  unordered_map<long long, Tree*> nodes;
+  long long cnt = 0;
+};
 
-  return i;
+long long func_cnt(long long num) {
+  if (num == 1)
+    return 0;
+
+  return num * (num - 1) / 2;
+}
+
+long long SumCntDFS(Tree* node) {
+  if (node == nullptr)
+    return 0;
+
+  long long sum = func_cnt(node->cnt);
+  for (auto& pair : node->nodes) {
+    sum += SumCntDFS(pair.second);
+  }
+  return sum;
 }
 
 int main() {
   int n;
   cin >> n;
 
-  vector<vector<int>> vec(n);
-
-  for (int i = 0; i < n; ++i) {
-    int k;
+  unordered_map<int, Tree*> prefs;
+  Tree* cur_tree = nullptr;
+  for (int i = 0; i < n; i++) {
+    int k, num;
     cin >> k;
-    vec[i].resize(k);
-    for (int j = 0; j < k; ++j) {
-      cin >> vec[i][j];
-    }
-  }
-
-  vector<int> prefs(n, 0);
-
-  long long sum = 0;
-  for (int i = 1; i < n; i++) {
-    prefs[i] = calculateSimilarity(vec[0], vec[i]);
-    sum += prefs[i];
-  }
-
-  for (int i = 1; i < n; i++) {
-    for (int j = i + 1; j < n; j++) {
-      if (prefs[i] == prefs[j]) {
-        sum += calculateSimilarity(vec[i], vec[j], prefs[i]);
+    cur_tree = nullptr;
+    for (int j = 0; j < k; j++) {
+      cin >> num;
+      if (cur_tree == nullptr) {
+        if (!prefs.contains(num)) {
+          prefs[num] = new Tree;
+        }
+        cur_tree = prefs[num];
+        cur_tree->cnt++;
       } else {
-        sum += min(prefs[i], prefs[j]);
+        if (!cur_tree->nodes.contains(num)) {
+          cur_tree->nodes[num] = new Tree;
+        }
+        cur_tree = cur_tree->nodes[num];
+        cur_tree->cnt++;
       }
     }
+  }
+
+  long long sum = 0;
+  for (auto& i : prefs) {
+    sum += SumCntDFS(i.second);
   }
 
   cout << sum << endl;

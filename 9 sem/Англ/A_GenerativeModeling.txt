@@ -1,0 +1,12 @@
+Generative agent-based modeling with actions grounded in physical, social, or digital space using Concordia
+https://arxiv.org/pdf/2312.03664.pdf
+
+Authors: Alexander Sasha Vezhnevets, John P. Agapiou, Avia Aharon, Ron Ziv, Jayd Matyas, Edgar A. Duéñez-Guzmán, William A. Cunningham, Simon Osindero, Danny Karmon, Joel Z. Leibo
+
+Publication Date: December 6, 2023
+
+The paper presents Concordia - a library for constructing and working with Generative Agent-Based Models (GABM) that facilitates language-mediated simulations in physically, socially, or digitally grounded environments. Concordia simplifies the design of generative agents and environments, integrating with Large Language Models (LLMs) and providing flexible mechanisms for modeling agent behavior and environmental interaction.
+
+The core concept involves agents describing their actions in natural language, and a special agent called the "Game Master" translates these actions into appropriate implementations considering the physical or digital environment. This allows for the creation of complex interaction and simulation scenarios, such as electoral campaigns, experiments in social psychology, and digital applications.
+
+Concordia's application spans a wide range of scientific research and practical tasks, including analyzing social dilemmas, modeling psychological models, and evaluating the performance of digital services. This library opens new possibilities for deep understanding of complex social interactions and the impact of digital technologies.

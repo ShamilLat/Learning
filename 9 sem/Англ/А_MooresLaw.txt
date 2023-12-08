@@ -1,4 +1,4 @@
-Annotation of "Technologies and Computing Paradigms: Beyond Moore’s Law?"
+Technologies and Computing Paradigms: Beyond Moore’s Law?
 https://arxiv.org/pdf/2206.03201.pdf
 
 Author: Daniel Etiemble, University of Paris Saclay

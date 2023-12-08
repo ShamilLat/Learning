@@ -1,0 +1,9 @@
+Supercomputers play a pivotal role in today’s research world by providing scientists with powerful tools for executing and modeling complex tasks. However, many users of supercomputers face challenges related to the optimization and efficiency of their applications. These issues stem from the need to analyze the data generated during task execution on supercomputers.
+
+This data is crucial as it contains information about the performance and functionality of individual services and systems within the supercomputer. Monitoring and analyzing this data helps in understanding how well different parts of the supercomputer are operating. One such supercomputer, the Lomonosov-2, stores data from executed tasks that is vital for analysis.
+
+A significant tool in this context is JobDigest. JobDigest is a system equipped with tools for analyzing the performance of not just individual applications running on the Lomonosov-2 supercomputer but the entire flow of tasks. It provides comprehensive insights into how applications are performing, which is essential for improving efficiency and optimizing the use of the supercomputer.
+
+By utilizing JobDigest, users can monitor output parameters from the system's sensors after task execution. This enables them to track the work and performance of various services and systems within the Lomonosov-2 supercomputer. The data and analysis provided by JobDigest are crucial for users to troubleshoot, enhance, and streamline their applications and tasks on the supercomputer.
+
+In summary, supercomputers like Lomonosov-2 are central to modern scientific research, offering unparalleled computing power for complex tasks. However, the challenge of optimizing these tasks is met by tools like JobDigest, which play a critical role in analyzing performance and ensuring efficient use of these technological giants.

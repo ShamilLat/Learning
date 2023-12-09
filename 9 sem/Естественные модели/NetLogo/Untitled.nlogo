@@ -1,215 +1,85 @@
-globals [
-  n
-  start
-  target
-  elite
-]
-
-turtles-own [
-  x
-  f
-]
+patches-own [ state old-state l-n cell have-good?]
 
 
-to setup
+to setup [mode]
   clear-all
-  setup-layout
-  let d [distance target] of start
-  set n floor (1.3 * d)
-  create-population
+  ask patches [setup-patch mode]
   reset-ticks
 end
 
 
-to setup-layout
-  ask patches [ set pcolor white ]
-  if layout = "random" [
-    ask n-of n-random patches [ set pcolor gray ]
+to recolor
+  ask cell [
+    set color rgb (255 / m * state) (255 - state * 255 / m) (255 - state * 255 / m)
   ]
-  if layout = "hole" [
-    let middle patches with [ pycor = 0 ]
-    ask middle [ set pcolor gray ]
-    ask one-of middle [ set pcolor white ]
-  ]
-  if layout = "double-hole" [
-    let bar-r patches with [ pycor = round (max-pycor / 3) ]
-    ask bar-r [set pcolor gray ]
-    ask one-of bar-r [ set pcolor white ]
-    let bar-l patches with [ pycor = round (min-pycor / 3) ]
-    ask bar-l [set pcolor gray ]
-    ask one-of bar-l [ set pcolor white ]
-  ]
-  if layout = "bar" [
-    let bar-middle patches with [ pycor = 0 and pxcor >= (- bar-len / 2) and pxcor < bar-len / 2 ]
-    ask bar-middle [ set pcolor gray ]
-  ]
-  if layout = "double-bar" [
-    let bar-r patches with [ pycor = round (max-pycor / 3) and pxcor >= (- bar-len) ]
-    ask bar-r [set pcolor gray ]
-    let bar-l patches with [ pycor = round (min-pycor / 3) and pxcor < bar-len ]
-    ask bar-l [set pcolor gray ]
-  ]
-  if layout = "two-path" [
-    ask patches [ set pcolor gray ]
-    ask patches with [abs pxcor < 10 and abs pycor < 10] [ set pcolor white ]
-    ask patches with [abs pxcor < 3] [ set pcolor white ]
-    ask patches with [abs pxcor < 8 and abs pycor < 8] [ set pcolor gray ]
-  ]
-  set start patch 0 (min-pycor + 1)
-  set target patch 0 (max-pycor - 1)
-  ask start [ set pcolor blue ]
-  ask target [ set pcolor red ]
 end
 
 
-to create-population
-  create-turtles pop-size [
+to setup-patch [mode]
+  set pcolor 0
+  set old-state 0
+  set state random m
+  sprout 1 [
     set shape "circle"
     set size 0.8
-    set x (list random 360)
-    repeat (n - 1) [ set x lput (90 - random 180) x ]
-    eval 1
+    set cell self
   ]
-end
-
-
-to eval [w]
-  move-to start
-  set heading 0
-  if w > 0 [pd set pen-size w]
-  let k 0
-  let stop? false
-  while [k < n and not stop?] [
-    rt item k x
-    let p-a patch-ahead 1
-    ifelse p-a = nobody or [pcolor] of p-a = gray
-    [set stop? true] [fd 1]
-    set k k + 1
-  ]
-  pu
-  set f distance target
+  recolor
 end
 
 
 to go
-  clear-drawing
-  set elite min-one-of turtles [f]
-  ask turtles [ set hidden? hide-turtles? ]
-  ask turtles [ select ]
-  ask turtles [
-    if self != elite [ crossover ]
+  ask patches [
+    let my-state state
+    let my-good? false
+    ask neighbors [
+      if (my-state + 1) mod m = state [
+        set my-good? true
+      ]
+    ]
+    set have-good? my-good?
   ]
-  ask turtles [
-    if self != elite [ mutate ]
+  ask patches [
+    if have-good? [set state (state + 1) mod m]
+    recolor
   ]
-  ifelse not show-best?
-  [
-    ask turtles [ eval 1 ]
-  ]
-  [
-    ask turtles [ eval -1 ]
-    ask min-one-of turtles [f] [eval 2]
-  ]
-  ;if [ any? turtles-here ] of target [ stop ]
   tick
-end
-
-
-to select-myself [o-t]
-  ask o-t [
-      set x [x] of myself
-      set f [f] of myself
-  ]
-end
-
-
-to select-opponent [o-t]
-  set x [x] of o-t
-  set f [f] of o-t
-end
-
-
-to select
-  if random-float 1 > 0.25 [ stop ]
-  let o-t one-of other turtles
-  let better? f < [f] of o-t
-  if [f] of o-t = [f] of elite [
-    select-opponent o-t
-    stop
-  ]
-  if [f] of self = [f] of elite [
-    select-myself o-t
-    stop
-  ]
-  ifelse better? xor (random-float 1 > 0.9) or o-t = elite
-  [ select-myself o-t ] [ select-opponent o-t ]
-end
-
-
-to crossover
-  if random-float 1 < 0.5 [ stop ]
-  let o-t one-of other turtles
-  let t (list)
-  let i 0
-  repeat n [
-    ifelse random-float 1 < 0.8
-    [
-      set t lput (item i x) t
-    ]
-    [
-      set t lput (item i [x] of o-t) t
-    ]
-    set i i + 1
-  ]
-  set x t
-end
-
-
-to mutate
-  if random-float 1 > 0.2 [ stop ]
-  let t (list)
-  let i 0
-  repeat n [
-    set t lput ((item i x) + random 5 - 2) t
-    set i i + 1
-  ]
-  set x t
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 0
 10
-624
-635
+737
+748
 -1
 -1
-18.67
+14.3
 1
 10
 1
 1
 1
 0
+1
+1
+1
+-25
+25
+-25
+25
 0
 0
-1
--16
-16
--16
-16
-1
-1
 1
 ticks
 30.0
 
 BUTTON
-623
+736
 10
-693
+821
 43
-NIL
 setup
+setup \"random\"
 NIL
 1
 T
@@ -220,59 +90,29 @@ NIL
 NIL
 1
 
-CHOOSER
-693
-10
-831
-55
-layout
-layout
-"empty" "bar" "double-bar" "random" "hole" "double-hole" "two-path"
-0
-
-INPUTBOX
-831
-10
-969
-70
-n-random
-100.0
-1
-0
-Number
-
-INPUTBOX
-832
-70
-969
-130
-bar-len
-5.0
-1
-0
-Number
-
-SLIDER
-693
-55
-832
-88
-pop-size
-pop-size
-1
-201
-201.0
-2
-1
+BUTTON
+821
+42
+886
+75
+step-go
+go
 NIL
-HORIZONTAL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+0
 
 BUTTON
-624
-43
-693
-76
-NIL
+736
+42
+821
+75
+forever-go
 go
 T
 1
@@ -284,38 +124,16 @@ NIL
 NIL
 0
 
-SWITCH
-693
-88
-832
-121
-hide-turtles?
-hide-turtles?
-1
-1
--1000
-
-SWITCH
-693
-121
-832
-154
-show-best?
-show-best?
-1
-1
--1000
-
-MONITOR
-969
+INPUTBOX
+950
 10
-1078
-55
-Best distance
-min [f] of turtles
-5
+1105
+70
+m
+15.0
 1
-11
+0
+Number
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -659,7 +477,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.3.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

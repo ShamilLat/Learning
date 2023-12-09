@@ -4,6 +4,10 @@
 
 using namespace std;
 
+/*
+ЗигЗаг итератор
+*/
+
 class ZigzagIterator {
  private:
   queue<pair<vector<int>::iterator, vector<int>::iterator>> q;

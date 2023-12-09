@@ -1,115 +1,55 @@
-globals [rules]
-patches-own [state]
+patches-own [state old-state l-n cell have-good?]
 
 to setup
   clear-all
+  ask patches [setup-patch]
   reset-ticks
-  if m = 3 [
-    set r 1
-  ]
-  if r = 2 [
-    set m 2
-  ]
-  make-rules
-  setup-patch
-end
-
-to randomize-number
-  setup
-  set number random (m ^ (m ^ (2 * r + 1)))
-end
-
-to make-rules
-  let n number
-  set rules (list)
-  let n-rules m ^ (2 * r + 1)
-  repeat n-rules [
-    set rules lput (n mod m) rules
-    set n floor (n / m)
-  ]
-  print rules
 end
 
 to recolor
-  if state = -1 [ set pcolor white ]
-  if state = 0 [ set pcolor color-0 ]
-  if state = 1 [ set pcolor color-1 ]
-  if state = 2 [ set pcolor color-2 ]
+  ask cell [
+    set color rgb (255 - state * 255 / m) (255 - state * 255 / m) (255 - state * 255 / m)
+  ]
 end
-
 
 to setup-patch
-  ask patches [
-    ifelse pycor != max-pycor
-    [
-      set state -1
-    ]
-    [
-      ifelse init-state = "single-1"
-      [
-        set state 0
-        if pxcor = 0 [ set state 1 ]
-      ]
-      [
-        set state random m
-      ]
-    ]
-    recolor
-  ]
-end
-
-to go
-  let c-l max-pycor - ticks - 1
-  ask patches [
-    if pycor = c-l
-    [
-      update-patch
-    ]
-
-  ]
-
-  if c-l = min-pycor
-  [
-    stop
-  ]
-  tick
-end
-
-to update-patch
-  ifelse (pxcor = max-pxcor or pxcor = min-pxcor) and boundary != "cyclic"
-  [
-    set state boundary
-  ]
-  [
-    let pos 0
-    let i (- r)
-    repeat 2 * r + 1 [
-      let a [state] of patch-at i 1
-      set pos pos * m
-      set pos pos + a
-      set i i + 1
-    ]
-    set state item pos rules
-
-    if reverse?
-    [
-      if (pycor < max-pycor - 1) [
-        let a [state] of patch-at 0 2
-        set state state xor a
-      ]
-    ]
+  set pcolor 0
+  set old-state 0
+  set state random m
+  sprout 1 [
+    set shape "circle"
+    set size 0.8
+    set cell self
   ]
   recolor
 end
+
+to go
+  ask patches [
+    let my-state state
+    let my-good? false
+    ask neighbors [
+      if (my-state + 1) mod m = state [
+        set my-good? true
+      ]
+    ]
+    set have-good? my-good?
+  ]
+  ask patches [
+    if have-good? [set state (state + 1) mod m]
+    recolor
+  ]
+  tick
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-167
-16
-779
-629
+168
+10
+623
+466
 -1
 -1
-4.0
+8.765
 1
 10
 1
@@ -119,10 +59,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--75
-75
--75
-75
+-25
+25
+-25
+25
 1
 1
 1
@@ -130,11 +70,11 @@ ticks
 30.0
 
 BUTTON
-14
-16
-80
-49
-NIL
+0
+10
+72
+43
+random
 setup
 NIL
 1
@@ -146,54 +86,26 @@ NIL
 NIL
 1
 
-INPUTBOX
-15
-210
-153
-270
-color-0
-85.0
-1
+SLIDER
 0
-Color
-
-INPUTBOX
-15
-275
+88
 154
-335
-color-1
-105.0
-1
+121
+m
+m
 0
-Color
-
-CHOOSER
-14
-120
-152
-165
-init-state
-init-state
-"single-1" "random"
-1
-
-INPUTBOX
-15
-341
-154
-401
-color-2
+100
 15.0
 1
-0
-Color
+1
+NIL
+HORIZONTAL
 
 BUTTON
-87
-16
-150
+0
 49
+72
+82
 NIL
 go
 T
@@ -206,64 +118,13 @@ NIL
 NIL
 0
 
-CHOOSER
-14
-409
-156
-454
-boundary
-boundary
-"cyclic" 0 1
-0
-
-INPUTBOX
-14
-54
-151
-114
-number
-240.0
-1
-0
-Number
-
-SLIDER
-14
-461
-157
-494
-m
-m
-2
-3
-3.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-14
-501
-157
-534
-r
-r
-1
-2
-1.0
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-15
-172
-153
-205
-NIL
-randomize-number
+80
+49
+154
+82
+step
+go
 NIL
 1
 T
@@ -272,18 +133,7 @@ NIL
 NIL
 NIL
 NIL
-1
-
-SWITCH
-13
-541
-158
-574
-reverse?
-reverse?
-1
-1
--1000
+0
 
 @#$#@#$#@
 ## WHAT IS IT?

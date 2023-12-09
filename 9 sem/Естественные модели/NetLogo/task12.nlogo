@@ -1,115 +1,163 @@
-globals [rules]
-patches-own [state]
+patches-own [state old-state l-n cell]
 
-to setup
+to setup [x]
   clear-all
   reset-ticks
-  if m = 3 [
-    set r 1
-  ]
-  if r = 2 [
-    set m 2
-  ]
-  make-rules
-  setup-patch
+  ask patches [setup-patch x]
+
 end
 
-to randomize-number
-  setup
-  set number random (m ^ (m ^ (2 * r + 1)))
-end
+to setup-patch [x]
+  set pcolor color-0
+  set old-state 0
 
-to make-rules
-  let n number
-  set rules (list)
-  let n-rules m ^ (2 * r + 1)
-  repeat n-rules [
-    set rules lput (n mod m) rules
-    set n floor (n / m)
+  if x = "random" and random 100 < density
+  [
+    set state 1
   ]
-  print rules
+  sprout 1
+  [
+    set shape "circle"
+    set size 0.8
+    set cell one-of turtles-here
+  ]
+  recolor
 end
 
 to recolor
-  if state = -1 [ set pcolor white ]
-  if state = 0 [ set pcolor color-0 ]
-  if state = 1 [ set pcolor color-1 ]
-  if state = 2 [ set pcolor color-2 ]
-end
-
-
-to setup-patch
-  ask patches [
-    ifelse pycor != max-pycor
-    [
-      set state -1
-    ]
-    [
-      ifelse init-state = "single-1"
-      [
-        set state 0
-        if pxcor = 0 [ set state 1 ]
-      ]
-      [
-        set state random m
-      ]
-    ]
-    recolor
+  ask cell [
+    (ifelse
+      state = 1 [ set color color-1 ]
+      state = 0 and old-state = 1 [ set color color-old-1 ]
+      [ set color color-0 ]
+    )
   ]
 end
 
 to go
-  let c-l max-pycor - ticks - 1
-  ask patches [
-    if pycor = c-l
-    [
-      update-patch
-    ]
-
-  ]
-
-  if c-l = min-pycor
+  if rules != "other"
   [
-    stop
+    set rule rules
+  ]
+  ask patches
+  [
+    set l-n sum [state] of neighbors
+  ]
+  ask patches
+  [
+    set old-state state
+    let c runresult rule
+    set state get-state c
+    recolor
   ]
   tick
 end
 
-to update-patch
-  ifelse (pxcor = max-pxcor or pxcor = min-pxcor) and boundary != "cyclic"
-  [
-    set state boundary
+to-report get-state [x]
+  if x = true [report 1]
+  report 0
+end
+
+to draw
+  let p patch mouse-xcor mouse-ycor
+  let erase? [state = 1] of p
+  while [mouse-down?] [
+    ask patch mouse-xcor mouse-ycor [
+      set state get-state not erase?
+      recolor
+    ]
+    display
   ]
+end
+
+to-report rotate [x y]
+  (ifelse
+  rotate? = "down"
   [
-    let pos 0
-    let i (- r)
-    repeat 2 * r + 1 [
-      let a [state] of patch-at i 1
-      set pos pos * m
-      set pos pos + a
+      report (- x)
+  ]
+  rotate? = "left"
+  [
+      report (- y)
+  ]
+  rotate? = "right"
+  [
+      report y
+  ]
+  )
+  report x
+end
+
+to draw-gl
+  if (mouse-down?)
+  [
+    let mouse-x mouse-xcor
+    let mouse-y mouse-ycor
+    let cords-x (list)
+    let cords-y (list)
+    let c-size 0
+    (ifelse
+      glider = 1
+      [
+        set cords-x (list 0 1  1  1 -1 -1 -1)
+        set cords-y (list 0 0 -1 -2  0 -1 -2)
+        set c-size 7
+      ]
+      glider = 2
+      [
+        set cords-x (list 0  0 -1 -2 -3)
+        set cords-y (list 0 -1  0  0 -2)
+        set c-size 5
+      ]
+      glider = 3
+      [
+        set cords-x (list 0 0 0 -1 -1 -2 -3 -4)
+        set cords-y (list 0 1 2  3  0  0  0  1)
+        set c-size 8
+      ]
+      glider = 4
+      [
+        set cords-x (list 0 0 0  1 -1)
+        set cords-y (list 0 1 -1 1  0)
+        set c-size 5
+      ]
+      glider = 5
+      [
+        set cords-x (list 0 0  0 1 1  1 -1 -1 -1 3 3 3 2 2 2 4 4 4)
+        set cords-y (list 0 1 -1 0 1 -1  0  1 -1 -2 -3 -4 -2 -3 -4 -2 -3 -4)
+        set c-size 18
+      ]
+      [
+        set cords-x (list 0 1 -1  0 -1 -2)
+        set cords-y (list 0 0  1 -2 -1 -1)
+        set c-size 6
+      ]
+    )
+    let i 0
+    repeat c-size
+    [
+      let x rotate (item i cords-x) (item i cords-y)
+      let y rotate (item i cords-y) (- (item i cords-x))
+
+      ask patch (mouse-x + x) (mouse-y + y) [
+        set state 1
+        recolor
+      ]
+      display
+
       set i i + 1
     ]
-    set state item pos rules
-
-    if reverse?
-    [
-      if (pycor < max-pycor - 1) [
-        let a [state] of patch-at 0 2
-        set state state xor a
-      ]
-    ]
   ]
-  recolor
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-167
-16
-779
-629
+168
+10
+623
+466
 -1
 -1
-4.0
+8.765
 1
 10
 1
@@ -119,23 +167,56 @@ GRAPHICS-WINDOW
 1
 1
 1
--75
-75
--75
-75
+-25
+25
+-25
+25
 1
 1
 1
 ticks
 30.0
 
+INPUTBOX
+0
+127
+155
+187
+color-0
+9.9
+1
+0
+Color
+
+INPUTBOX
+0
+193
+155
+253
+color-1
+66.0
+1
+0
+Color
+
+INPUTBOX
+0
+259
+155
+319
+color-old-1
+54.0
+1
+0
+Color
+
 BUTTON
-14
-16
-80
-49
-NIL
-setup
+0
+10
+72
+43
+random
+setup \"random\"
 NIL
 1
 T
@@ -146,54 +227,43 @@ NIL
 NIL
 1
 
-INPUTBOX
-15
-210
-153
-270
-color-0
-85.0
-1
-0
-Color
-
-INPUTBOX
-15
-275
+BUTTON
+80
+10
 154
-335
-color-1
-105.0
+43
+clear
+setup \"clear\"
+NIL
 1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
 0
-Color
-
-CHOOSER
-14
-120
-152
-165
-init-state
-init-state
-"single-1" "random"
-1
-
-INPUTBOX
-15
-341
+88
 154
-401
-color-2
-15.0
-1
+121
+density
+density
 0
-Color
+100
+1.0
+1
+1
+NIL
+HORIZONTAL
 
 BUTTON
-87
-16
-150
+0
 49
+72
+82
 NIL
 go
 T
@@ -206,65 +276,31 @@ NIL
 NIL
 0
 
-CHOOSER
-14
-409
-156
-454
-boundary
-boundary
-"cyclic" 0 1
-0
-
-INPUTBOX
-14
-54
-151
-114
-number
-240.0
-1
-0
-Number
-
-SLIDER
-14
-461
-157
-494
-m
-m
-2
-3
-3.0
-1
-1
+BUTTON
+80
+49
+154
+82
+step
+go
 NIL
-HORIZONTAL
-
-SLIDER
-14
-501
-157
-534
-r
-r
 1
-2
-1.0
-1
-1
+T
+OBSERVER
 NIL
-HORIZONTAL
+NIL
+NIL
+NIL
+0
 
 BUTTON
-15
-172
-153
-205
+0
+326
+63
+359
 NIL
-randomize-number
-NIL
+draw
+T
 1
 T
 OBSERVER
@@ -274,16 +310,63 @@ NIL
 NIL
 1
 
-SWITCH
-13
-541
-158
-574
-reverse?
-reverse?
+CHOOSER
+0
+421
+155
+466
+rotate?
+rotate?
+"up" "down" "left" "right"
+0
+
+CHOOSER
+0
+368
+156
+413
+glider
+glider
+1 2 3 4 5 6
 1
+
+BUTTON
+74
+326
+155
+359
+NIL
+draw-gl
+T
 1
--1000
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+INPUTBOX
+168
+475
+623
+535
+rule
+l-n = 1
+1
+0
+String
+
+CHOOSER
+0
+483
+156
+528
+rules
+rules
+"l-n = 3 or (l-n = 2 and state = 1)" "(l-n mod 2) = 1" "l-n > 0" "l-n = 1" "other"
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

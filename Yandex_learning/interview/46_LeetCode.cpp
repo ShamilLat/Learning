@@ -17,7 +17,7 @@ class Solution {
     int low = 0, high = n1;
 
     while (low <= high) {
-      int mid1 = (low + high) >> 1;  // Calculate mid index for nums1
+      int mid1 = (low + high) / 2;  // Calculate mid index for nums1
       int mid2 = left - mid1;        // Calculate mid index for nums2
 
       int l1 = INT_MIN, l2 = INT_MIN, r1 = INT_MAX, r2 = INT_MAX;

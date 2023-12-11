@@ -1,116 +1,219 @@
-globals [rules]
-patches-own [state]
+breed [chars char]
+
+globals [chain d delta x0 y0 delta-0 k-shorten turtle-1 pos d-delta]
+chars-own [v alpha cmd]
 
 to setup
   clear-all
   reset-ticks
-  if m = 3 [
-    set r 1
-  ]
-  if r = 2 [
-    set m 2
-  ]
-  make-rules
-  setup-patch
-end
-
-to randomize-number
-  setup
-  set number random (m ^ (m ^ (2 * r + 1)))
-end
-
-to make-rules
-  let n number
-  set rules (list)
-  let n-rules m ^ (2 * r + 1)
-  repeat n-rules [
-    set rules lput (n mod m) rules
-    set n floor (n / m)
-  ]
-  print rules
-end
-
-to recolor
-  if state = -1 [ set pcolor white ]
-  if state = 0 [ set pcolor color-0 ]
-  if state = 1 [ set pcolor color-1 ]
-  if state = 2 [ set pcolor color-2 ]
-end
-
-
-to setup-patch
-  ask patches [
-    ifelse pycor != max-pycor
+  ask patches [set pcolor white]
+  (ifelse
+    l-system = "Koch island"
     [
-      set state -1
+      setup-koch-island
     ]
+    l-system = "Simple tree"
     [
-      ifelse init-state = "single-1"
-      [
-        set state 0
-        if pxcor = 0 [ set state 1 ]
-      ]
-      [
-        set state random m
-      ]
+      setup-simple-tree
     ]
-    recolor
+    l-system = "Hilbert curve"
+    [
+      setup-hilbert-curve
+    ]
+    l-system = "Dragon line"
+    [
+      setup-dragon-line
+    ]
+    l-system = "Pythagoras tree"
+    [
+      setup-pythagoras-tree
+    ]
+    l-system = "file"
+    [
+      read-file
+    ]
+  )
+  create-turtles 1
+  [
+    init-turtle
+    set turtle-1 self
   ]
+  set pos 0
+  set d-delta 0
 end
 
 to go
-  let c-l max-pycor - ticks - 1
-  ask patches [
-    if pycor = c-l
-    [
-      update-patch
-    ]
-
-  ]
-
-  if c-l = min-pycor
-  [
-    stop
-  ]
+  if pos = length chain [restart]
+  ask one-of turtles with-max [who] [run-cmd]
+  set pos pos + 1
+  if pos = length chain [stop]
   tick
 end
 
-to update-patch
-  ifelse (pxcor = max-pxcor or pxcor = min-pxcor) and boundary != "cyclic"
-  [
-    set state boundary
+to read-file
+  file-open filename
+  while [not file-at-end?] [
+    run file-read-line
   ]
-  [
-    let pos 0
-    let i (- r)
-    repeat 2 * r + 1 [
-      let a [state] of patch-at i 1
-      set pos pos * m
-      set pos pos + a
-      set i i + 1
-    ]
-    set state item pos rules
+  file-close
+end
 
-    if reverse? [
-      let state-1 [state] of patch-at 0 2
-      ifelse state > 0 xor state-1 > 0 [
-        set state 1
-      ] [
-        set state 0
-      ]
-    ]
+to init-turtle
+  setxy x0 y0
+  set heading delta-0
+  set shape "turtle"
+  set color hsb 0 100 100
+  set size 2
+  set pen-size 2
+end
+
+to add-rule [u al cm]
+  create-chars 1
+  [
+    set hidden? true
+    set v u
+    set alpha al
+    set cmd cm
   ]
-  recolor
+end
+
+to restart
+  clear-drawing
+  update-chain
+  set pos 0
+  if l-system != "Pythagoras tree"
+  [
+    set d d * k-shorten
+  ]
+  set delta-0 delta-0 + d-delta
+  ask turtle-1 [init-turtle]
+end
+
+to update-chain
+  let l to-list chain
+  let a map get-alpha l
+  set chain reduce word a
+end
+
+to-report to-list [c]
+  let l []
+  while [c != ""] [
+    set l lput first c l
+    set c but-first c
+  ]
+  report l
+end
+
+to run-cmd
+  let h 360 * pos / (length chain)
+  set color hsb h 100 100
+  let cm get-cmd item pos chain
+  if cm = "F" [pd fd d pu]
+  if cm = "f" [fd d]
+  if cm = "+" [lt delta]
+  if cm = "-" [rt delta]
+  if cm = "[" [hatch 1]
+  if cm = "]" [die]
+  if cm = "S" [
+    fd d
+    set shape "square"
+    set size d * 1.25
+    stamp
+  ]
+  if cm = "b"
+  [
+    set d d / k-shorten * 2
+  ]
+  if cm = "s"
+  [
+    set d d / 2
+    set shape "turtle"
+    set size 2
+
+    fd d
+    set d d * k-shorten
+  ]
+end
+
+to-report get-alpha [u]
+  let c one-of chars with [v = u]
+  if c = nobody [report u]
+  report [alpha] of c
+end
+
+to-report get-cmd [u]
+  let c one-of chars with [v = u]
+  if c = nobody [report u]
+  report [cmd] of c
+end
+
+to setup-koch-island
+  add-rule "F" "F-F+F+FF-F-F+F" "F"
+  set chain "F-F-F-F"
+  set d 16
+  set delta 90
+  set x0 -8
+  set y0 8
+  set delta-0 90
+  set k-shorten 0.25
+end
+
+to setup-simple-tree
+  add-rule "F" "F[+F]F[-F]" "F"
+  set chain "F"
+  set d 16
+  set delta 25
+  set x0 0
+  set y0 -14
+  set delta-0 0
+  set k-shorten 0.5
+end
+
+to setup-hilbert-curve
+  add-rule "A" "+BX-AXA-XB+" "A"
+  add-rule "B" "-AX+BXB+XA-" "B"
+  add-rule "X" "X" "F"
+  set chain "A"
+  set d 24
+  set delta 90
+  set x0 -12
+  set y0 -12
+  set delta-0 90
+  set k-shorten 0.5
+end
+
+to setup-dragon-line
+  add-rule "L" "L+R+" "F"
+  add-rule "R" "-L-R" "F"
+  set chain "L"
+  set d 16
+  set delta 90
+  set x0 0
+  set y0 0
+  set delta-0 90
+  set k-shorten 0.69
+  set d-delta 45
+end
+
+to setup-pythagoras-tree
+  add-rule "X" "Ss[+X][-X]b" "S"
+  set chain "X"
+  set d 5
+  set delta 45
+  set x0 0
+  set y0 -14
+  set delta-0 0
+  set k-shorten sqrt 2
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-167
-16
-779
-629
+152
+10
+820
+679
 -1
 -1
-4.0
+20.0
 1
 10
 1
@@ -120,21 +223,21 @@ GRAPHICS-WINDOW
 1
 1
 1
--75
-75
--75
-75
-0
-0
+-16
+16
+-16
+16
+1
+1
 1
 ticks
 30.0
 
 BUTTON
-14
-16
-80
-49
+0
+10
+66
+43
 NIL
 setup
 NIL
@@ -147,54 +250,11 @@ NIL
 NIL
 1
 
-INPUTBOX
-15
-210
-153
-270
-color-0
-85.0
-1
-0
-Color
-
-INPUTBOX
-15
-275
-154
-335
-color-1
-105.0
-1
-0
-Color
-
-CHOOSER
-14
-120
-152
-165
-init-state
-init-state
-"single-1" "random"
-1
-
-INPUTBOX
-15
-341
-154
-401
-color-2
-15.0
-1
-0
-Color
-
 BUTTON
-87
-16
-150
-49
+75
+10
+138
+43
 NIL
 go
 T
@@ -208,83 +268,36 @@ NIL
 0
 
 CHOOSER
-14
-409
-156
-454
-boundary
-boundary
-"cyclic" 0 1
-1
+0
+51
+139
+96
+l-system
+l-system
+"Koch island" "Simple tree" "Hilbert curve" "Dragon line" "Pythagoras tree" "file"
+4
 
 INPUTBOX
-14
-54
-151
-114
-number
-127.0
+0
+105
+139
+165
+filename
+file.txt
 1
 0
-Number
+String
 
-SLIDER
-14
-461
-157
-494
-m
-m
-2
-3
-2.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-14
-501
-157
-534
-r
-r
-1
-2
-1.0
-1
-1
-NIL
-HORIZONTAL
-
-BUTTON
-15
-172
-153
-205
-NIL
-randomize-number
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SWITCH
-13
-541
-158
-574
-reverse?
-reverse?
+MONITOR
 0
+175
+57
+220
+NIL
+d
+17
 1
--1000
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -532,7 +545,7 @@ Polygon -7500403 true false 276 85 285 105 302 99 294 83
 Polygon -7500403 true false 219 85 210 105 193 99 201 83
 
 square
-false
+true
 0
 Rectangle -7500403 true true 30 30 270 270
 

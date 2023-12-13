@@ -1,8 +1,0 @@
-Improved Real-Space Parallelizable Matrix-Product State Compression and its Application to Unitary Quantum Dynamics Simulation
-https://arxiv.org/pdf/2312.02667.pdf
-
-Authors: Rong-Yang Sun, Tomonori Shirakawa, Seiji Yunoki
-
-Publication Date: December 6, 2023
-
-The paper introduces an improved real-space parallelizable matrix-product state (MPS) compression method, applicable to the simulation of unitary quantum dynamics. The authors present a new parallel time-evolving block-decimation (pTEBD) algorithm, which enhances efficiency in simulating quantum systems with large numbers of qubits, exceeding 1000. The focus is on improving simulation stability and accuracy through parallel MPS compression and maintaining wavefunction norm stability, achieving high performance on modern supercomputers. This approach offers significant advancements over traditional sequential MPS methods, providing a new perspective for exploring quantum many-body dynamics and advancing quantum computing.

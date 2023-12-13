@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <unordered_set>
+#include <vector>
 
 using namespace std;
 
@@ -136,7 +137,6 @@ void run_life(int n, int T, int rank, int size) {
           //      << endl;
           // cout << "pos2 = " << j * (local_n + 2) + k + 1 << endl << endl;
           result[row * n * local_n + j * n + col * local_n + k] =
-              // result[i * local_n * local_n + j * local_n + k] =
               tmp[(j + 1) * (local_n + 2) + k + 1];
         }
       }
@@ -147,23 +147,28 @@ void run_life(int n, int T, int rank, int size) {
   }
 
   if (rank == 0) {
+    ofstream f("output.dat");
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
-        cout << result[i * n + j] << " ";
+        f << result[i * n + j];
       }
-      cout << endl;
+      f << endl;
     }
+    f.close();
+
+    // for (int i = 0; i < n; i++) {
+    //   for (int j = 0; j < n; j++) {
+    //     cout << result[i * n + j] << " ";
+    //   }
+    //   cout << endl;
+    // }
+    ofstream s("stat.txt");
+    s << "Time = " << end_time - start_time << "\n";
+    s << "n = " << n << "\n";
+    s << "T = " << T << "\n";
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
-
-  // ofstream f("output.dat");
-  // for (int i = 1; i <= n; i++) {
-  //   for (int j = 1; j <= n; j++)
-  //     f << data[i * (n + 2) + j];
-  //   f << endl;
-  // }
-  // f.close();
 }
 
 int main(int argc, char** argv) {

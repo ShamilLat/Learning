@@ -64,15 +64,15 @@ void exchange_borders(int* grid, int n, int rank, int size, int p) {
 // Главная функция для запуска "Игры Жизнь"
 void run_life(int n, int T, int rank, int size) {
   int p = sqrt(size);
-  int local_n = n / p;  // Размер локальной доски для каждого процесса
+  int local_n = n / p + 2;  // Размер локальной доски для каждого процесса
 
   vector<int> grid(local_n * local_n, 0);
   vector<int> new_grid(local_n * local_n, 0);
 
   // Инициализация глайдера в центре локальной доски
   if (rank == p / 2 * (p + 1)) {
-    grid[(local_n / 2) * local_n + local_n / 2] = 1;
-    grid[(local_n / 2 - 1) * local_n + local_n / 2 + 1] = 1;
+    grid[(local_n / 2) * local_n + local_n / 2 + 1] = 1;
+    grid[(local_n / 2 - 1) * local_n + local_n / 2] = 1;
     grid[(local_n / 2 + 1) * local_n + local_n / 2 - 1] = 1;
     grid[(local_n / 2 + 1) * local_n + local_n / 2] = 1;
     grid[(local_n / 2 + 1) * local_n + local_n / 2 + 1] = 1;
@@ -88,9 +88,10 @@ void run_life(int n, int T, int rank, int size) {
 
   double end_time = MPI_Wtime();
 
+  vector<int> final_grid;
   if (rank == 0) {
     // Сбор результатов и запись в файлы
-    vector<int> final_grid(n * n, 0);
+    final_grid = vector<int>(n * n, 0);
     // Сборка и запись локальных досок...
     // Запись в output.txt
 

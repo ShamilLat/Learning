@@ -1,7 +1,9 @@
 #include <mpi.h>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <unordered_set>
+#include <vector>
 
 using namespace std;
 

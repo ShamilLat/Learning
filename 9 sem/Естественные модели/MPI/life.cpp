@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <unordered_set>
@@ -58,9 +59,9 @@ void exchange_borders(vector<int>& grid, int n, int rank, int size, int p) {
   }
 }
 
-unordered_set<int> poses;
+// unordered_set<int> poses;
 
-void setup_set(int n) {
+void setup_set(int n, unordered_set<int>& poses) {
   int n0 = 1 + n / 2;
   int m0 = 1 + n / 2;
   int middle_point = n0 * (n + 2) + m0;
@@ -72,7 +73,12 @@ void setup_set(int n) {
   }
 }
 
-void init(int n, vector<int>& data, int local_n, int p, int rank) {
+void init(int n,
+          vector<int>& data,
+          int local_n,
+          int p,
+          int rank,
+          unordered_set<int>& poses) {
   for (int i = 0; i < (n + 2) * (n + 2); i++)
     data[i] = 0;
 
@@ -87,9 +93,8 @@ void init(int n, vector<int>& data, int local_n, int p, int rank) {
     for (int j = 0; j < local_n + 2; j++) {
       int tmp = row * (n + 2) * local_n + col * local_n + i * (n + 2) + j;
       if (poses.find(tmp) != poses.end()) {
-        // cout << "rank = " << rank << ", tmp = " << tmp << ", i j = " << i <<
-        // " "
-        //      << j << endl;
+        cout << "rank = " << rank << ", tmp = " << tmp << ", i j = " << i << " "
+             << j << endl;
         data[i * (local_n + 2) + j] = 1;
       }
     }
@@ -100,12 +105,13 @@ void run_life(int n, int T, int rank, int size) {
   int p = sqrt(size);
   int local_n = n / p;
 
-  setup_set(n);
+  unordered_set<int> poses;
+  setup_set(n, poses);
   MPI_Barrier(MPI_COMM_WORLD);
 
   vector<int> local_data((local_n + 2) * (local_n + 2), 0);
   vector<int> new_data((local_n + 2) * (local_n + 2), 0);
-  init(n, local_data, local_n, p, rank);
+  init(n, local_data, local_n, p, rank, poses);
 
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -127,10 +133,8 @@ void run_life(int n, int T, int rank, int size) {
 
   for (int t = 0; t < T; ++t) {
     update_data(local_n, local_data, new_data);
-    // cout << "AAA" << endl;
     local_data = new_data;
     // swap(local_data, new_data);
-    // cout << "BBB" << endl;
 
     // for (int i = 0; i < 4; i++) {
     //   if (rank == i) {
@@ -147,7 +151,6 @@ void run_life(int n, int T, int rank, int size) {
     // }
 
     exchange_borders(local_data, local_n + 2, rank, size, p);
-    // cout << "CCC" << endl;
   }
 
   double end_time = MPI_Wtime();
@@ -164,13 +167,6 @@ void run_life(int n, int T, int rank, int size) {
       }
       for (int j = 0; j < local_n; j++) {
         for (int k = 0; k < local_n; k++) {
-          // cout << "pos = " << row * n * local_n + j * n + col * local_n + k
-          //      << endl;
-          // cout << "pos2 = " << j * (local_n + 2) + k + 1 << endl << endl;
-          // cout << "pos = "
-          //      << row * n * local_n + col * local_n * (j + 1) + j * local_n +
-          //      k
-          //      << endl;
           result[row * n * local_n + col * local_n + j * n + k] =
               tmp[(j + 1) * (local_n + 2) + k + 1];
         }
@@ -191,12 +187,6 @@ void run_life(int n, int T, int rank, int size) {
     }
     f.close();
 
-    // for (int i = 0; i < n; i++) {
-    //   for (int j = 0; j < n; j++) {
-    //     cout << result[i * n + j] << " ";
-    //   }
-    //   cout << endl;
-    // }
     cout << "Time = " << end_time - start_time << "\n";
     ofstream s("stat.txt");
     s << "Time = " << end_time - start_time << "\n";

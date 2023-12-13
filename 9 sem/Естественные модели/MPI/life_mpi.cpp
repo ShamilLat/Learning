@@ -1,104 +1,161 @@
 #include <mpi.h>
-#include <cmath>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
 
-// Функция для определения состояния клетки
-int cell_state(int* grid, int x, int y, int n) {
-  int alive = 0;
-  for (int i = -1; i <= 1; ++i) {
-    for (int j = -1; j <= 1; ++j) {
-      if (i == 0 && j == 0)
-        continue;
-      alive += grid[((x + i + n) % n) * n + ((y + j + n) % n)];
-    }
-  }
-  if (grid[x * n + y] == 1) {
-    return (alive == 2 || alive == 3) ? 1 : 0;
-  }
-  return (alive == 3) ? 1 : 0;
+int f(vector<int>& data, int i, int j, int n) {
+  int state = data[i * (n + 2) + j];
+  int s = -state;
+  for (int ii = i - 1; ii <= i + 1; ii++)
+    for (int jj = j - 1; jj <= j + 1; jj++)
+      s += data[ii * (n + 2) + jj];
+  if (state == 0 && s == 3)
+    return 1;
+  if (state == 1 && (s < 2 || s > 3))
+    return 0;
+  return state;
 }
 
-// Функция для обновления состояния доски
-void update_board(int* grid, int* new_grid, int n) {
-  for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) {
-      new_grid[i * n + j] = cell_state(grid, i, j, n);
-    }
-  }
+void update_data(int n, vector<int>& data, vector<int>& temp) {
+  for (int i = 1; i <= n; i++)
+    for (int j = 1; j <= n; j++)
+      temp[i * (n + 2) + j] = f(data, i, j, n);
 }
 
-// Функция для обмена граничными строками и столбцами
-void exchange_borders(int* grid, int n, int rank, int size, int p) {
+void exchange_borders(vector<int>& grid, int n, int rank, int size, int p) {
   MPI_Status status;
 
-  // Вычисляем координаты текущего процесса в 2D решетке
   int row = rank / p;
   int col = rank % p;
 
-  // Определяем соседей
-  int up = (row == 0) ? (p - 1) * p + col : rank - p;
-  int down = (row == p - 1) ? col : rank + p;
-  int left = (col == 0) ? rank + p - 1 : rank - 1;
-  int right = (col == p - 1) ? rank - p + 1 : rank + 1;
+  int up = (row == 0) ? ((p - 1) * p + col) : (rank - p);
+  int down = (row == p - 1) ? col : (rank + p);
+  int left = (col == 0) ? (rank + p - 1) : (rank - 1);
+  int right = (col == p - 1) ? (rank - p + 1) : (rank + 1);
 
   // Обмен верхней и нижней границы
-  MPI_Sendrecv(&grid[n], n, MPI_INT, up, 0, &grid[0], n, MPI_INT, down, 0,
-               MPI_COMM_WORLD, &status);
-  MPI_Sendrecv(&grid[(n - 2) * n], n, MPI_INT, down, 1, &grid[(n - 1) * n], n,
+  MPI_Sendrecv(grid.data() + n, n, MPI_INT, up, 0, grid.data() + (n * (n - 1)),
+               n, MPI_INT, down, 0, MPI_COMM_WORLD, &status);
+  MPI_Sendrecv(grid.data() + ((n - 2) * n), n, MPI_INT, down, 1, grid.data(), n,
                MPI_INT, up, 1, MPI_COMM_WORLD, &status);
 
+  MPI_Barrier(MPI_COMM_WORLD);
   // Обмен левой и правой границы
   for (int i = 0; i < n; ++i) {
-    MPI_Sendrecv(&grid[i * n + 1], 1, MPI_INT, left, 2, &grid[i * n], 1,
+    MPI_Sendrecv(&grid[i * n + 1], 1, MPI_INT, left, 2, &grid[i * n + n - 1], 1,
                  MPI_INT, right, 2, MPI_COMM_WORLD, &status);
-    MPI_Sendrecv(&grid[i * n + n - 2], 1, MPI_INT, right, 3,
-                 &grid[i * n + n - 1], 1, MPI_INT, left, 3, MPI_COMM_WORLD,
-                 &status);
+    MPI_Sendrecv(&grid[i * n + n - 2], 1, MPI_INT, right, 3, &grid[i * n], 1,
+                 MPI_INT, left, 3, MPI_COMM_WORLD, &status);
   }
 }
 
-// Главная функция для запуска "Игры Жизнь"
+void setup_set(int n, unordered_set<int>& poses) {
+  int n0 = 1 + n / 2;
+  int m0 = 1 + n / 2;
+  int middle_point = n0 * (n + 2) + m0;
+  vector<int> points = {middle_point + 1, middle_point - (n + 2),
+                        middle_point + (n + 2) + 1, middle_point + (n + 2),
+                        middle_point + (n + 2) - 1};
+  for (auto& tmp : points) {
+    poses.insert(tmp);
+  }
+}
+
+void init(int n,
+          vector<int>& data,
+          int local_n,
+          int p,
+          int rank,
+          unordered_set<int>& poses) {
+  for (int i = 0; i < (local_n + 2) * (local_n + 2); i++)
+    data[i] = 0;
+
+  int row = rank / p;
+  int col = rank % p;
+
+  int n0 = 1 + n / 2;
+  int m0 = 1 + n / 2;
+  int middle_point = n0 * (n + 2) + m0;
+
+  for (int i = 0; i < local_n + 2; i++) {
+    for (int j = 0; j < local_n + 2; j++) {
+      int tmp = row * (n + 2) * local_n + col * local_n + i * (n + 2) + j;
+      if (poses.find(tmp) != poses.end()) {
+        data[i * (local_n + 2) + j] = 1;
+      }
+    }
+  }
+}
+
 void run_life(int n, int T, int rank, int size) {
   int p = sqrt(size);
-  int local_n = n / p + 2;  // Размер локальной доски для каждого процесса
+  int local_n = n / p;
 
-  vector<int> grid(local_n * local_n, 0);
-  vector<int> new_grid(local_n * local_n, 0);
+  unordered_set<int> poses;
+  setup_set(n, poses);
+  MPI_Barrier(MPI_COMM_WORLD);
 
-  // Инициализация глайдера в центре локальной доски
-  if (rank == p / 2 * (p + 1)) {
-    grid[(local_n / 2) * local_n + local_n / 2 + 1] = 1;
-    grid[(local_n / 2 - 1) * local_n + local_n / 2] = 1;
-    grid[(local_n / 2 + 1) * local_n + local_n / 2 - 1] = 1;
-    grid[(local_n / 2 + 1) * local_n + local_n / 2] = 1;
-    grid[(local_n / 2 + 1) * local_n + local_n / 2 + 1] = 1;
-  }
+  vector<int> local_data((local_n + 2) * (local_n + 2), 0);
+  vector<int> new_data((local_n + 2) * (local_n + 2), 0);
+  init(n, local_data, local_n, p, rank, poses);
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   double start_time = MPI_Wtime();
 
   for (int t = 0; t < T; ++t) {
-    exchange_borders(grid.data(), local_n, rank, size, p);
-    update_board(grid.data(), new_grid.data(), local_n);
-    grid.swap(new_grid);
+    update_data(local_n, local_data, new_data);
+    local_data = new_data;
+    exchange_borders(local_data, local_n + 2, rank, size, p);
   }
 
   double end_time = MPI_Wtime();
 
-  vector<int> final_grid;
+  vector<int> result(n * n, 0);
   if (rank == 0) {
-    // Сбор результатов и запись в файлы
-    final_grid = vector<int>(n * n, 0);
-    // Сборка и запись локальных досок...
-    // Запись в output.txt
-
-    ofstream stat("stat.txt");
-    stat << "Total Time: " << (end_time - start_time) << " seconds" << endl;
-    stat.close();
+    vector<int> tmp(local_data);
+    for (int i = 0; i < size; i++) {
+      int row = i / p;
+      int col = i % p;
+      if (i != 0) {
+        MPI_Recv(&tmp[0], (local_n + 2) * (local_n + 2), MPI_INT, i, 0,
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      }
+      for (int j = 0; j < local_n; j++) {
+        for (int k = 0; k < local_n; k++) {
+          result[row * n * local_n + col * local_n + j * n + k] =
+              tmp[(j + 1) * (local_n + 2) + k + 1];
+        }
+      }
+    }
+  } else {
+    MPI_Send(&local_data[0], (local_n + 2) * (local_n + 2), MPI_INT, 0, 0,
+             MPI_COMM_WORLD);
   }
+
+  if (rank == 0) {
+    ofstream f("output.dat");
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        f << result[i * n + j];
+      }
+      f << endl;
+    }
+    f.close();
+
+    cout << "Time = " << end_time - start_time << "\n";
+    ofstream s("stat.txt");
+    s << "Time = " << end_time - start_time << "\n";
+    s << "n = " << n << "\n";
+    s << "T = " << T << "\n";
+    s.close();
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 int main(int argc, char** argv) {
@@ -110,7 +167,7 @@ int main(int argc, char** argv) {
 
   if (argc != 3) {
     if (rank == 0) {
-      cerr << "Usage: " << argv[0] << " n T" << endl;
+      std::cout << "Usage: " << argv[0] << " n T" << endl;
     }
     MPI_Finalize();
     return 1;

@@ -119,19 +119,18 @@ to run-cmd
     set shape "square"
     set size d * 1.25
     stamp
-  ]
-  if cm = "b"
-  [
-    set d d / k-shorten * 2
-  ]
-  if cm = "s"
-  [
-    set d d / 2
+    fd d / 2
     set shape "turtle"
     set size 2
 
-    fd d
+  ]
+  if cm = "b"
+  [
     set d d * k-shorten
+  ]
+  if cm = "s"
+  [
+    set d d / k-shorten
   ]
 end
 
@@ -191,7 +190,7 @@ to setup-dragon-line
   set x0 0
   set y0 0
   set delta-0 90
-  set k-shorten 0.69
+  set k-shorten 0.695
   set d-delta 45
 end
 
@@ -275,7 +274,7 @@ CHOOSER
 l-system
 l-system
 "Koch island" "Simple tree" "Hilbert curve" "Dragon line" "Pythagoras tree" "file"
-4
+3
 
 INPUTBOX
 0
@@ -291,7 +290,7 @@ String
 MONITOR
 0
 175
-57
+139
 220
 NIL
 d

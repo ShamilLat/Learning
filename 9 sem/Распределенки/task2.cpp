@@ -6,29 +6,40 @@
 #include <random>
 #include <vector>
 
+using namespace std;
+
 void add_comp(int first, int second, int rank, std::vector<double>& data) {
   int other_rank = (rank == first) ? second : first;
   std::vector<double> other_data(data.size());
 
-  // Отправляем и получаем данные
   int size;
-  std::cout << "RANKS " << first << " " << second << std::endl;
 
-  MPI_Sendrecv(&data[0], data.size(), MPI_DOUBLE, other_rank, 0, &other_data[0],
-               data.size(), MPI_DOUBLE, other_rank, 0, MPI_COMM_WORLD,
-               MPI_STATUS_IGNORE);
+  MPI_Sendrecv(data.data(), data.size(), MPI_DOUBLE, other_rank, 0,
+               other_data.data(), data.size(), MPI_DOUBLE, other_rank, 0,
+               MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-  // Объединение и сортировка
-  data.insert(data.end(), other_data.begin(), other_data.end());
-  std::sort(data.begin(), data.end());
-
-  // Распределение элементов
+  vector<double> new_data(data.size());
   if (rank == first) {
-    data = std::vector<double>(data.begin(), data.begin() + data.size() / 2);
+    int i1 = 0, i2 = 0;
+    for (int i = 0; i < data.size(); i++) {
+      if (data[i1] < other_data[i2]) {
+        new_data[i] = data[i1++];
+      } else {
+        new_data[i] = other_data[i2++];
+      }
+    }
   } else {
-    data = std::vector<double>(data.begin() + data.size() / 2, data.end());
+    int i1 = data.size() - 1, i2 = data.size() - 1;
+    for (int i = data.size() - 1; i >= 0; i--) {
+      if (data[i1] > other_data[i2]) {
+        new_data[i] = data[i1--];
+      } else {
+        new_data[i] = other_data[i2--];
+      }
+    }
   }
-  std::cout << "RANKS " << first << " " << second << " END" << std::endl;
+
+  data = new_data;
 }
 
 void S(int first1,
@@ -111,11 +122,9 @@ int main(int argc, char* argv[]) {
     array_size = std::stoi(argv[1]);
   }
 
-  // Общий массив данных на процессе 0
   std::vector<double> data;
 
   if (rank == 0) {
-    // Инициализация массива данных на процессе 0
     data.resize(array_size);
     for (int i = 0; i < array_size; i++) {
       data[i] = rand() % array_size;
@@ -126,38 +135,36 @@ int main(int argc, char* argv[]) {
     int cnt = size - array_size % size;
     if (rank == 0) {
       data.insert(data.end(), cnt, DBL_MAX);
-      for (auto& i : data) {
-        std::cout << i << " ";
-      }
-      std::cout << std::endl;
     }
     array_size += cnt;
   }
 
-  // Размер части данных, которая будет отправлена каждому процессу
   int local_size = array_size / size;
 
-  // Локальный буфер для принятых данных
   std::vector<double> local_data(local_size);
 
-  // Рассылка данных по процессам с использованием MPI_Scatter
   MPI_Scatter(data.data(), local_size, MPI_DOUBLE, local_data.data(),
               local_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-  std::sort(local_data.begin(), local_data.end());
+  double start_time = MPI_Wtime();
 
+  std::sort(local_data.begin(), local_data.end());
   B(0, 1, size, rank, local_data);
 
-  MPI_Gather(&local_data[0], local_size, MPI_DOUBLE, &data[0], local_size,
+  double end_time = MPI_Wtime();
+
+  MPI_Gather(local_data.data(), local_size, MPI_DOUBLE, data.data(), local_size,
              MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
+  double result_time = end_time - start_time;
+  
+  double reduce_time;
+  MPI_Reduce(&result_time, &reduce_time, 1, MPI_DOUBLE, MPI_SUM, 0,
+             MPI_COMM_WORLD);
+
   if (rank == 0) {
-    // Инициализация массива данных на процессе 0
+    cout << "Time = " << reduce_time / (double)size << endl;
     data.resize(std::stoi(argv[1]));
-    for (auto& i : data) {
-      std::cout << i << " ";
-    }
-    std::cout << std::endl;
   }
 
   MPI_Finalize();

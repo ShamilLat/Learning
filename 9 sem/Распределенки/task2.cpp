@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
 
   int array_size = 1024;
 
-  if (argc != 2) {
+  if (argc < 2) {
     if (rank == 0) {
       std::cout << "Usage: " << argv[0] << " <array_size>\n";
     }
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
              MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   double result_time = end_time - start_time;
-  
+
   double reduce_time;
   MPI_Reduce(&result_time, &reduce_time, 1, MPI_DOUBLE, MPI_SUM, 0,
              MPI_COMM_WORLD);
@@ -165,6 +165,17 @@ int main(int argc, char* argv[]) {
   if (rank == 0) {
     cout << "Time = " << reduce_time / (double)size << endl;
     data.resize(std::stoi(argv[1]));
+
+    if (argc > 2 && strcmp(argv[2], "test") == 0) {
+      cout << "TESTING" << endl;
+      for (int i = 1; i < data.size(); i++) {
+        if (data[i - 1] > data[i]) {
+          printf("NOT OK: data[%d] = %lf, data[%d] = %lf\n", i - 1, data[i - 1],
+                 i, data[i]);
+        }
+      }
+      cout << "Test end" << endl;
+    }
   }
 
   MPI_Finalize();

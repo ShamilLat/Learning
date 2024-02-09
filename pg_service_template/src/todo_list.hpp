@@ -20,14 +20,10 @@ class TodoTaskHandler final : public server::handlers::HttpHandlerBase {
       server::request::RequestContext&) const override;
 
  private:
-  std::string GetValue(const server::http::HttpRequest& request,
-                       std::string_view user_ip) const;
-  std::string DeleteValue(const server::http::HttpRequest& request,
-                          int node_id) const;
-  std::string PutValue(const server::http::HttpRequest& request,
-                       std::string_view user_ip) const;
-  std::string PatchValue(const server::http::HttpRequest& request,
-                         std::string_view user_ip) const;
+  std::string GetValue(const server::http::HttpRequest& request user_ip) const;
+  std::string DeleteValue(const server::http::HttpRequest& request) const;
+  std::string PutValue(const server::http::HttpRequest& request) const;
+  std::string PatchValue(const server::http::HttpRequest& request) const;
 
   storages::postgres::ClusterPtr pg_cluster_;
 };

@@ -39,25 +39,15 @@ TodoTaskHandler::TodoTaskHandler(const components::ComponentConfig& config,
 std::string TodoTaskHandler::HandleRequestThrow(
     const server::http::HttpRequest& request,
     server::request::RequestContext&) const {
-  // const auto note_id = std::stoi(request.GetArg("id"));
-  // const auto note_status = std::stoi(request.GetArg("note_status"));
-  // const auto& user_ip = request.GetArg("user_ip");
-
-  formats::json::Value json = formats::json::FromString(request.RequestBody());
-
-  const auto note_id = json["id"].As<int>(-1);
-  const auto user_ip = json["ip"].As<std::string>("");
-  const auto note_status = json["note_status"].As<int>(UNCOMPLETE_NOTE);
-
   switch (request.GetMethod()) {
     case server::http::HttpMethod::kGet:
-      return GetValue(request, user_ip, note_status);
+      return GetValue(request);
     case server::ttp::HttpMethod::kDelete:
-      return DeleteValue(request, note_id);
+      return DeleteValue(request);
     case server::ttp::HttpMethod::kPut:
-      return PutValue(request, user_ip);
+      return PutValue(request);
     case server::ttp::HttpMethod::kPatch:
-      return PatchValue(request, note_id, note_status);
+      return PatchValue(request);
     default:
       throw server::handlers::ClientError(server::handlers::ExternalBody{
           fmt::format("Unsupported method {}", request.GetMethod())});
@@ -77,8 +67,6 @@ const storages::postgres::Query kSelectAnyStatusNote{
 
 std::string TodoTaskHandler::GetValue(
     const server::http::HttpRequest& request) const {
-  using NotesStatuses;
-
   const auto& user_ip = request.GetArg("user_ip");
   const auto& status = request.GetArg("notes_status");
 
@@ -143,7 +131,7 @@ std::string TodoTaskHandler::PutValue(
                          storages::postgres::ClusterHostType::kMaster, {});
 
   auto res = transaction.Execute(
-      "INSERT INTO todo_schema.notes(user_ip, note_text, note_type) VALUES($1, "
+      "INSERT INTO todo_list_table(user_ip, note_text, note_type) VALUES($1, "
       "$2, 0) RETURNING id",
       user_ip, note_text);
 
@@ -160,9 +148,7 @@ std::string TodoTaskHandler::PutValue(
 }
 
 std::string TodoTaskHandler::PatchValue(
-    const server::http::HttpRequest& request,
-    int note_id,
-    int note_status) {
+    const server::http::HttpRequest& request) {
   const auto& note_id_str = request.GetArg("note_id");
 
   if (note_id_str.empty()) {

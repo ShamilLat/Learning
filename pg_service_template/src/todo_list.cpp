@@ -15,11 +15,7 @@
 
 namespace service_todo_list {
 
-enum class NotesParameters {
-  MAX_NOTE_SIZE = 128,
-  UNCOMPLETE_NOTE = 0,
-  COMPLETE_NOTE = 1
-};
+const size_t MAX_NOTE_SIZE = 128;
 
 TodoTaskHandler::TodoTaskHandler(const components::ComponentConfig& config,
                                  const components::ComponentContext& context)
@@ -79,17 +75,23 @@ const storages::postgres::Query kSelectAnyStatusNote{
     storages::postgres::Query::Name{"select_any_note"},
 };
 
-std::string TodoTaskHandler::GetValue(const server::http::HttpRequest& request,
-                                      std::string_view user_ip,
-                                      int status) const {
-  // status имеет 3 значения: 0, 1, 2.
-  // 0 - невыполненные задачи, 1 - выполненные, 2 - любые
+std::string TodoTaskHandler::GetValue(
+    const server::http::HttpRequest& request) const {
+  using NotesStatuses;
+
+  const auto& user_ip = request.GetArg("user_ip");
+  const auto& status = request.GetArg("notes_status");
+
+  if (user_ip.emtpy() || status.empty()) {
+    request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
+    return {};
+  }
 
   storages::postgres::ResultSet res;
-  if (status == 0 || status == 1) {
+  if (status == "uncomplete" || status == "complete") {
     res = pg_cluster_->Execute(storages::postgres::ClusterHostType::kSlave,
                                kSelectCurrentStatusNote, user_ip, status);
-  } else if (status == 2) {
+  } else if (status == "any") {
     res = pg_cluster_->Execute(storages::postgres::ClusterHostType::kSlave,
                                kSelectAnyStatusNote, user_ip);
   } else {
@@ -106,8 +108,16 @@ std::string TodoTaskHandler::GetValue(const server::http::HttpRequest& request,
 }
 
 std::string TodoTaskHandler::DeleteValue(
-    const server::http::HttpRequest& request, int note_id) const {
-  if (note_id == -1) {
+    const server::http::HttpRequest& request) const {
+  const auto& note_id_str = request.GetArg("note_id");
+  if (note_id_str.empty()) {
+    request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
+    return {};
+  }
+
+  int note_id = std::atoi(note_id_str.data());
+
+  if (note_id == 0) {
     request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
     return {};
   }
@@ -118,10 +128,12 @@ std::string TodoTaskHandler::DeleteValue(
   return std::to_string(res.RowsAffected());
 }
 
-std::string TodoTaskHandler::PutValue(const server::http::HttpRequest& request,
-                                      std::string_view user_ip) {
+std::string TodoTaskHandler::PutValue(
+    const server::http::HttpRequest& request) {
+  const auto& user_ip = request.GetArg("user_ip");
   const auto& note_text = request.GetArg("note_text");
-  if (note_text.empty() || note_text.size() > NotesParameters::MAX_NOTE_SIZE) {
+  if (user_ip.empty() || note_text.empty() ||
+      note_text.size() > MAX_NOTE_SIZE) {
     request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
     return {};
   }
@@ -148,18 +160,45 @@ std::string TodoTaskHandler::PutValue(const server::http::HttpRequest& request,
 }
 
 std::string TodoTaskHandler::PatchValue(
-    const server::http::HttpRequest& request, int note_id, int note_status) {
-  if (note_id == -1) {
+    const server::http::HttpRequest& request,
+    int note_id,
+    int note_status) {
+  const auto& note_id_str = request.GetArg("note_id");
+
+  if (note_id_str.empty()) {
+    request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
+    return {};
+  }
+
+  int note_id = std::atoi(note_id_str.data());
+
+  if (note_id == 0) {
     request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
     return {};
   }
 
   const auto& note_text = request.GetArg("note_text");
+  const auto& note_status = request.GetArg("note_status");
+
+  if (note_text.empty() || note_status.empty()) {
+    request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
+    return {};
+  }
+
+  bool status;
+  if (note_status == "false") {
+    status = false;
+  } else if (note_status == "true") {
+    status = true;
+  } else {
+    request.SetResponseStatus(server::http::HttpStatus::kBadRequest);
+    return {};
+  }
 
   auto res = pg_cluster_->Execute(
       storages::postgres::ClusterHostType::kMaster,
       "UPDATE todo_list_table SET note_text=$2, note_type=$3 WHERE id=$1",
-      note_id, note_text, note_status);
+      note_id, note_text, status);
 
   return res.AsSingleRow<std::string>();
 }

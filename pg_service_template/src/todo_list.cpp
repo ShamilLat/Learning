@@ -203,4 +203,10 @@ std::string TodoTaskHandler::PatchValue(
   return res.AsSingleRow<std::string>();
 }
 
+void AppendHello(userver::components::ComponentList& component_list) {
+  component_list.Append<TodoTaskHandler>();
+  component_list.Append<userver::components::Postgres>("postgres-todo-db");
+  component_list.Append<userver::clients::dns::Component>();
+}
+
 }  // namespace service_todo_list

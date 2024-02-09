@@ -32,4 +32,6 @@ class TodoTaskHandler final : public server::handlers::HttpHandlerBase {
   storages::postgres::ClusterPtr pg_cluster_;
 };
 
+void AppendToDoHandler(userver::components::ComponentList& component_list);
+
 }  // namespace service_todo_list
